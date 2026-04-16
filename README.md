@@ -66,20 +66,29 @@ En UCM_Bot encontramos componentes muy parecidos, aunque se ha añadido FSM como
 
 ## Estructura del proyecto
 
-El repositorio nos proporciona el proyecto organizado de esta forma:
+El repositorio nos proporciona el proyecto organizado de una forma específica en la que destaca la carpeta **FPS** donde contiene todos los assets propios del proyecto. Aquí se encuentran:
+- Animaciones
+- Arte (fuentes de letra, materiales, modelos, shaders y texturas)
+- Audio
+- Prefabs
+- Escenes
+- Scripts
+- Tutorials
 
-Nos proporciona ciertos componentes importantes para arrancar:
-
-COMPLETAR
-| Script | Tipo | Definición |
-|--------|------|------------|
-| `GameManager.cs`| *Manager* | Singleton. Maneja cambios de escena y parametrización de la creación del laberinto. Se encarga de actualizar la interfaz de usuario y comprobar si el jugador ha llegado a la salida|
+Dentro de la carpeta *script* se localizan:
+- AI
+- Editor
+- Game
+- Gameplay
+- MiMultiplayer
+- UI
 
 # Planteamiento del problema
-Tenemos un escenario de Unity 3D que está compuesto por varias escenas: menú inicial, victoria, derrota, escena principal, escena secundaria y escena de prisión.
+Tenemos un proyecto de Unity 3D que está compuesto por varias escenas: menú inicial, victoria, derrota, escena principal, escena secundaria y escena de prisión.
 
 El flujo del juego se ilustra con el siguiente diagrama:
 <diagrama>
+Intro->prision->?
 
 Desarrollamos un prototipo que nos permitirá:
 

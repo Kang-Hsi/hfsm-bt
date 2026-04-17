@@ -127,7 +127,7 @@ Desarrollamos un prototipo que nos permitirá:
 
 # Implementación
 Los siguientes scripts han sido desarrollados por el equipo durante la práctica:
-
+ 
 |Script|Tipo|Definición|
 |--|--|--|
 |Vigia|*Comportamiento*|Rotar aleatoriamente de forma periódica|
@@ -183,16 +183,179 @@ Los siguientes scripts han sido desarrollados por el equipo durante la práctica
 
 ## Implementación de cada apartado
 
-**Apartado A**
+### Apartado A
 
 
-**Apartado B**
+### Apartado B
 
-**Apartado C**
+### Apartado C
 
-**Apartado D**
+### Apartado D
+El comportamiento del agente inteligente se ha implementado mediante una **máquina de estados finita jerárquica (HFSM)**, cuyo objetivo es gestionar de forma estructurada y eficiente la toma de decisiones dentro del entorno dinámico.
 
-**Apartado E** 
+#### D.1. Enfoque general
+
+Se ha optado por un diseño jerárquico en lugar de una máquina de estados plana, con el fin de mejorar la modularidad, escalabilidad y mantenibilidad del sistema. Este enfoque permite separar:
+
+- *Decisiones estratégicas (alto nivel):* determinan el objetivo global del agente.
+- *Decisiones tácticas (bajo nivel):* definen cómo se ejecuta dicho objetivo en función del contexto actual.
+
+La arquitectura se compone de una **máquina de estados principal (global)** y varias **submáquinas especializadas**, cada una encargada de gestionar un comportamiento concreto.
+
+
+#### D.2. Máquina de estados global
+
+La máquina de estados global actúa como el núcleo del sistema de decisión y determina el estado general del agente en cada instante. Los estados principales definidos son:
+
+* **Explorar:** comportamiento por defecto. El agente recorre el entorno utilizando la malla de navegación de Unity y waypoints, explorando distintas estancias y buscando recursos o enemigos.
+* **Combatir:** se activa cuando el agente detecta enemigos. En este estado se gestionan todas las acciones de ataque.
+* **Sobrevivir:** prioriza la supervivencia del agente cuando su salud es baja.
+* **Reequipar:** se encarga de la búsqueda y adquisición de armas o botequín cuando el agente no dispone de recursos adecuados.
+
+Las transiciones entre estos estados se basan en condiciones del entorno y del propio agente, tales como la visibilidad de enemigos, la candidad de vida o la disponibilidad de munición.
+```mermaid
+stateDiagram-v2
+    [*] --> Explorar
+
+    Explorar --> Combatir : enemigo visible
+    Explorar --> Reequipar : sin arma
+    Explorar --> Sobrevivir : vida baja
+
+    Combatir --> Sobrevivir : a punto de morir
+    Combatir --> Reequipar : sin munición
+    Combatir --> Explorar : sin enemigos
+
+    Sobrevivir --> Explorar : recuperado
+    Sobrevivir --> Combatir : enemigo cercano
+
+    Reequipar --> Combatir : enemigo visible
+    Reequipar --> Explorar : equipado
+```
+---
+
+#### D.3. Submáquinas de estados
+
+Cada estado principal contiene una submáquina de estados que gestiona el comportamiento detallado del agente.
+
+- **3.1. Submáquina de Combate**
+
+    Es la más compleja del sistema y controla las interacciones directas con otros agentes. Incluye los siguientes estados:
+
+    - **Decidir:** evalúa la situación inicial y decide la acción más adecuada.
+    - **Perseguir:** el agente persigue al enemigo cuando no está en rango de ataque.
+    - **Atacar:** ejecución de acciones ofensivas como apuntar, disparar y moverse lateralmente.
+    - **Cubrir:** búsqueda de cobertura cuando el agente se encuentra en desventaja.
+    - **Retirar:** retirada estratégica en situaciones críticas.
+    ```mermaid
+    stateDiagram-v2
+    [*] --> Decidir
+
+    Decidir --> Atacar : en rango
+    Decidir --> Perseguir : lejos
+    Decidir --> Cubrir : desventaja
+    Decidir --> Retirar : vida baja
+
+    Perseguir --> Atacar : visible
+    Perseguir --> Decidir : pierde objetivo
+
+    Atacar --> Cubrir : mucho daño
+    Atacar --> Perseguir : pierde visión
+    Atacar --> Retirar : vida baja
+
+    Cubrir --> Atacar : ventaja
+    Cubrir --> Retirar : presión
+
+    Retirar --> Decidir : recuperado
+    ```
+---
+
+- **3.2. Submáquina de Supervivencia**
+    Gestiona el comportamiento defensivo del agente:
+    - **Evadir:** evasión para evitar daño.
+    - **BuscarBotequín:** buscar de botiquines en el entorno.
+    - **Esconder:** permanecer en zonas seguras hasta recuperar condiciones favorables.
+    ```mermaid
+    stateDiagram-v2
+    [*] --> Evadir
+
+    Evadir --> BuscarBotequín : detecta botiquín
+    BuscarBotequín --> Esconder : recuperando
+    Esconder --> Evadir : peligro
+
+    Esconder --> [*] : recuperado
+    ```
+---
+
+- **3.3. Submáquina de Reequipamiento**
+    Encargada de optimizar el equipamiento del agente en función de la situación del entorno, mejorando tanto su capacidad ofensiva como su supervivencia y movilidad:
+
+    - **BuscarArma:** localización y recogida de armas disponibles en el entorno.
+    - EvaluateWeapon: análisis del arma actual en comparación con otras disponibles, teniendo en cuenta factores como distancia al enemigo o tipo de combate.
+    - **ElegirArma:** selección y cambio al arma más adecuada según la situación.
+    - **BuscarUtilidad:** búsqueda de utensilios como botiquines o el jetpack, que permiten mejorar la supervivencia o movilidad del agente.
+    - **UsarPropulsor:** activación y uso del jetpack en situaciones donde proporciona ventaja táctica.
+
+    El uso del jetpack introduce una mejora significativa en la movilidad del agente, permitiéndole acceder a zonas elevadas, escapar de situaciones de peligro o reposicionarse estratégicamente durante el combate.
+
+    ```Mermaid
+    stateDiagram-v2
+    [*] --> BuscarArma
+
+    BuscarArma --> ElegirArma
+    ElegirArma --> BuscarUtilidad
+
+    BuscarUtilidad --> [*] : equipado
+
+    [*] --> UsarPropulsor : necesita ventaja
+    UsarPropulsor --> [*]
+    ```
+---
+
+- **3.4. Submáquina de Exploración**
+
+    Controla el desplazamiento por el entorno:
+
+    - **Patrullar:** recorrido de puntos clave del mapa.
+    - **BuscarRecursos:** búsqueda de recursos cercanos.
+    - **Investigar:** inspección de eventos relevantes como sonidos o combates cercanos.
+    ```mermaid
+    stateDiagram-v2
+    [*] --> Patrullar
+
+    Patrullar --> BuscarRecursos : recurso detectado
+    Patrullar --> Investigar : evento detectado
+
+    BuscarRecursos --> Patrullar : sin recursos cercanos
+    BuscarRecursos --> Investigar : evento cercano
+
+    Investigar --> Patrullar : sin evento
+    Investigar --> BuscarRecursos : recurso detectado
+    ```
+---
+
+#### D.4. Integración con el sistema
+
+La máquina de estados no actúa de forma aislada, sino que se integra con otros subsistemas del agente:
+
+- **Navegación (NavMesh):** utilizada para el movimiento entre posiciones.
+- Proporciona información sobre enemigos, objetos y eventos del entorno.
+- Almacena variables compartidas como salud, munición o posiciones de interés.
+Cada actualización del agente consiste en evaluar el estado actual, comprobar las condiciones de transición y ejecutar la lógica asociada al estado activo.
+
+---
+
+#### D.5. Ventajas del enfoque
+
+El uso de una máquina de estados jerárquica aporta múltiples beneficios:
+
+- **Modularidad:** cada comportamiento se implementa de forma independiente.
+- **Escalabilidad:** permite añadir nuevos estados sin modificar la estructura global.
+- **Reutilización:** las submáquinas pueden emplearse en otros agentes.
+- **Claridad:** facilita la comprensión y depuración del sistema.
+
+---
+
+### Apartado E
 
 ## Evolución
 |**Estado**|**Tarea**|**Fecha**|

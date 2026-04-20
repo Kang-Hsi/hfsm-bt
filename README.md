@@ -136,51 +136,306 @@ Los siguientes scripts han sido desarrollados por el equipo durante la práctica
 |IAMinotauro| *Controlador IA* | Controlador de la IA del Minotauro. Gestiona el cambio entre el estado habitual y perseguir a Teseo. |
 
 ## **Comportamientos implementados**
-**VisionMinotauro**
-- Representa el cono de visión de un enemigo.
+### Máquina de estados finitos (FSM)
+- Modelo computacional que representa un sistema con un número limitado de estados y que solo puede estar en uno a la vez. 
+- Cambia de estado según las entradas actuales y las reglas de transición.
 - Características:
-    1. El enemigo solo puede detectar al jugador dentro de un rango de visión máximo.
-    2. La detección está limitada por un ángulo de visión, formando un cono frente al enemigo.
-    3. El jugador debe estar dentro tanto del rango como del ángulo para ser visible.
-    4. Se utiliza un raycast para comprobar si existen obstáculos (como paredes) que bloqueen la visión.
-    5. Si hay un obstáculo entre el enemigo y el jugador, este no será detectado.
-- Pseudocódigo:
-    >```c
-    >class MinotaurVision:
-    >
-    ># references
-    >character: Kinematic
-    >target: Kinematic
-    >
-    ># variables
-    >visionRange: float
-    >visionAngle: float
-    >obstacles: LayerMask 
-    >
-    ># functions
-    >function CanSeePlayer() -> bool:
-    >    if target == null:
-    >	return false
-    >
-    >    directionToTarget= target.position - character.position
-    >    distance = magnitude(directionToTarget)
-    >	
-    >    # 1. check distance
-    >    if distance > visionRange:
-    >	return false
-    >
-    >    # 2. check angle
-    >    angle = angleBetween(character.forward, directionToPlayer)
-    >    if angle > visionAngle / 2:
-    >	return false
-    >
-    >    # 3. raycast to check obstacles
-    >    if raycast(character.position, normalize(directionToPlayer), distance, obstacles):
-    >	return false
-    >
-    >    return true
-    >``` 
+    1. Posee un conjunto limitado y definido de modos de operación.
+    2. El cambio de un estado a otro se basa en eventos o condiciones.
+    3. Solo opera en un estado específico en cada momento.
+    4. Puede producir lógicas en las transiciones de salida y/o entrada.
+    5. Solo tiene información de su estado presente, no el historial completo.
+    6. Las transiciones pueden ser predecibles o tener opciones.
+- Pseudocódigos:
+**1. Estados y transiciones codificados**
+```py
+class MyFSM:
+    # names for each state 
+    enum State:
+        PATROL
+        ATTACK
+        FLEE
+    # the current state
+    myState: State
 
+    function update():
+        # find the correct state
+        if myState == PATROL:
+            # example transitions
+            if cond_A():
+                myState = ATTACK
+            else if cond_B():
+                myState = FLEE
+        else if myState == ATTACK:
+            # example transitions
+            if not cond_A():
+                myState = PATROL
+        else if myState == FLEE:
+            # example transitions
+            if not cond_B():
+                myState = PATROL
+``` 
+>```mermaid
+>stateDiagram-v2
+>
+>[*] --> PATROL
+>
+>PATROL --> ATTACK: cond_A()
+>PATROL --> FLEE: cond_B()
+>
+>ATTACK --> PATROL: not cond_A()
+>
+>FLEE --> PATROL: not cond_B()
+>```
+>*Representación gráfica del ejemplo*
+
+**2. Máquina de estados**
+```py
+class StateMachine:
+    # we are in one state at a time
+    initialState: State
+    # the current state
+    currentState: State = initialState
+
+    # check and apply transitions, returning a list of actions:
+    function update() -> Actions[]:
+        # assume no transition is triggered
+        triggered: Transition = null
+
+        # check through each transition and store the first one that triggeres
+        for t in currentState.getTransitions():
+            if t.isTriggered():
+                triggered = t
+                break
+        
+        # check if we have transition to fire
+        if triggered:
+            # find the target state
+            targetState = triggered.getTargetState()
+
+            # add the exit action of the old state, 
+            # the transition action and the entry for the new state
+            actions = currentState.getExitActions()
+            actions += triggered.getActions()
+            actions += targetState.getEntryActions()
+
+            # complete the transition and return the action list
+            currentState = targetState
+            return actions
+        # otherwise just return the current state's actions
+        else:
+            return currentState.getActions()
+``` 
+**3. Interfaces**
+```py
+class State:
+    funtion getActions() -> Action[]
+    funtion getEntryActions() -> Action[]
+    funtion getExitActions() -> Action[]
+    funtion getTransitions() -> Transition[]
+
+class Transtition:
+    # logic condition
+    condition: Condition
+    funtion isTriggered() -> bool:
+        return condition.test()
+
+    targetState: State
+    funtion getTargetState() -> State:
+        return targetState
+    
+    actions: Actions[]
+    funtion getActions() -> Action[]:
+        return actions
+
+# base interface for all FSM conditions
+class Condition:
+    funtion test() -> bool
+
+# all programmed conditions must inherit from this interface
+class MyCondition extends Condition:
+    # store datas we want to test
+
+    function test() -> bool:
+        # our logic
+``` 
+
+### Máquina de estados jerárquica (HFSM)
+- Extensión de la FSM que permite que un estado contenga otros sub-estados internos, organizando el comportamiento en niveles y evitando la repetición de lógica común.
+- Características:
+    1. Un estado puede tener dentro otros estados.
+    2. Los estados hijos heredan las transiciones y acciones del estado padre.
+    3. Evita dibujar la misma transición desde muchos estados.
+    4. Al entrar a un padre, se puede activar su estado hijo inicial.
+    5. Puede recordar en qué sub-estado estaba al salir y volver allí al reingresar.
+    6. Lo que aplica para varios estados se declara una sola vez en el ancestro común.
+    7. Permite crecer el comportamiento sin explotar en transiciones cruzadas.
+- Pseudocódigos:
+**1. Interfaz base**
+```py
+class HSMBase:
+    # the structure returned by update
+    class UpdateResult:
+        actions
+        transition
+        level
+    
+    function getActions() -> Action[]:
+        return []
+    
+    function update() -> UpdateResult:
+        UpdateResult result = new UpdateResult()
+        result.actions = getActions()
+        result.transition = null
+        result.level = 0
+        return result
+    
+    # pure virtual function
+    function getStates() -> State[] 
+``` 
+**2. Máquina de estados jerárquica**
+```py
+class HierarchicalStateMachine extends HSMBase:
+    # list of states for when the machine has no current state
+    initialState: State
+
+    # current state of the machine
+    currentState: State = initialState
+
+    # get the current state stack
+    function getStates() -> State[]:
+        if currentState:
+            return currentState.getStates()
+        else:
+            return []
+    
+    # recursively update the machine
+    function update() -> UpdateResult:
+        # if we're in no state, just use the initial one
+        if not currentState:
+            currentState = initialState
+            return currentState.getEntryActions()
+        
+        # try to find a transition in the current state
+        triggeredTransition = null
+        for t in currentState.getTransitions():
+            if t.isTriggered():
+                triggeredTransition = t
+                break
+        
+        # if we found one, make a result structure of it
+        if triggeredTransition:
+            result = new UpdateResult()
+            result.actions = []
+            result.transition = triggeredTransition
+            result.level = triggeredTransition.getLevel()
+        # otherwise, recurse down for a result
+        else:
+            result = currentState.update()
+        
+        # check if the result contains a transition
+        if result.transition:
+            # act based on its level
+            if result.level == 0:
+                # its on our level: honor it
+                targetState = result.transition.getTargetState()
+                result.actions += result.transition.getTargetState()
+                result.actions += currentState.getExitActions()
+                result.actions += result.transition.getActions()
+                result.actions += targetState.getEntryActions()
+
+                # set our current state
+                currentState = targetState
+
+                # add our normal action (we may be a state)
+                result.actions += getActions()
+
+                # clear the transition 
+                result.transition = null
+            else if result.levels > 0:
+                # it's destinated for a higher level
+                # exit our current state
+                result.actions += currentState.getExitActions()
+                currentState = null
+
+                # decrease the number of levels to go
+                result.level -= 1
+            else:
+                # it needs to be passed down
+                targetState = result.transition.getTargetState()
+                targetMachine = targetState.parent
+                result.actions += result.transition.getActions()
+                result.actions += targetMachine.updateDown(targetState, -result.level)
+
+                # clear the transition, so nobody elsee does it
+                result.transition = null
+        # if we did not get a transition
+        else:
+            # just do normal action
+            result.action += getActions()
+        
+        return result
+    
+    # recurses up the parent hierarchy, transitioning into each state 
+    # in turn for the given number of levels
+    function updateDown(state: State, level: int) -> Action[]:
+        # if we are not top level, continue
+        if level > 0:
+            # pass ourself as transition state to our parent
+            actions = parent.updateDown(this, level-1)
+        # otherwise we have no actions to add
+        else:
+            actions = []
+        
+        # if we have a current state, exit it
+        if currentState:
+            actions += currentState.getExitActions()
+
+        # move to the new state, and return all the actions
+        currentState = state
+        actions += state.getEntryActions()
+
+        return actions 
+``` 
+**3. Estado y Transición**
+```py
+class State: extends HSMBase:
+    function getStates() -> State:
+        # if we are just a state, then the stack is just us
+        return [this]
+    
+    funtion getActions() -> Action[]
+    funtion getEntryActions() -> Action[]
+    funtion getExitActions() -> Action[]
+    funtion getTransitions() -> Transition[]
+
+class Transtition:
+    # return the difference in levels of the hierarchy from 
+    # the source to the target of the transition
+    function getLevel() -> int
+
+    funtion isTriggered() -> bool
+    funtion getTargetState() -> State
+    funtion getActions() -> Action[]
+``` 
+**4. Submáquina de estados**
+```py
+class SubMachineState: extends State, HierarchicalStateMachine:
+    # route to the state
+    funcion getActions() -> Action[]:
+        return State.getActions()
+    
+    # route update to the state machine
+    function update() -> Action[]:
+        return HierarchicalStateMachine.update()
+    
+    # we get states by adding ourself to our active children
+    function getStates() -> State[]:
+        if currentState:
+            return [this] + currentState.getStates()
+        else:
+            return [this]
+``` 
 ## Implementación de cada apartado
 
 ### Apartado A
@@ -395,9 +650,11 @@ A continuación se detalla un plan de pruebas para verificar que se cumplen todo
 ## Referencias
 
 ### Bibliografía
-* Millington, I. (2019). *AI for Games* (3.ª ed.). CRC Press. — Referencia principal para el pseudocódigo de A*, suavizado de caminos y steering behaviors.
-
+* Millington, I. (2019). *AI for Games* (3.ª ed.). CRC Press. 
+* de Byl, P.: Finite State Machines (URL)
+poner mas
 ### Recursos y assets
-
+* Unity: Introduction to Visual Scripting (URL)
+* Unity: Script Machines and State Machines (URL)
 ### Videojuegos referentes
-
+Poner algun juego

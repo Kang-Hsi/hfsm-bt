@@ -621,16 +621,16 @@ El uso de una máquina de estados jerárquica aporta múltiples beneficios:
 A continuación se detalla un plan de pruebas para verificar que se cumplen todos los requisitos del enunciado. Se organiza por apartados (A–E) según las características.
 
 - **Apartado A**
-
+Hay un navmesh puesto ya en la escena principal, lo que puede que no esté son las waypoints. La cámara en primera persona está hecha ya, falta una segunda cámara como minimapa o cámara 3D no sé a qué se refiere
     ---
 - **Apartado B**
-
+Generación de los agentes que son capaces de realizar todo lo descrito
     ---
 - **Apartado C**
-    
+Navegación del agente 
     ---
 - **Apartado D**
-    
+Toma de decisiones
     ---
 - **Apartado E**
 

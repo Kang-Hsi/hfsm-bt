@@ -9,29 +9,29 @@
 
 Un prototipo básico de un un entorno virtual que nos sirve para poner en práctica la **toma de decisiones**. Este es el [enunciado](https://narratech.com/es/inteligencia-artificial-para-videojuegos/decision/disturbios-orbitales/) en la web de Narratech.
 
-El objetivo es utilizar máquina de estados jeárquica, técnica frecuentemente usada en la industria, combinado con búsquedas de caminos mediante mallas de navegación y comportamientos de dirección.
+El objetivo es usar una máquina de estados jeárquica, técnica frecuentemente usada en la industria, combinado con búsquedas de caminos mediante mallas de navegación y comportamientos de dirección.
 
 # Instalación y uso
 
-Todo el contenido del proyecto está disponible en este repositorio, utilizamos Unity 6 **(6000.3.12f1).**
+Todo el contenido del proyecto está disponible en este repositorio. Se utiliza Unity 6 **(6000.3.12f1).**
 
 En el repositorio se localiza el ejecutable de dicha práctica para poder experimentar los comportamientos.
 ENLACE
 
 # Introducción
 
-Este proyecto es una práctica de la asignatura de Inteligencia Artificial para Videojuegos del Grado en Desarrollo de Videojuegos de la UCM. Esta práctica consiste en plantear un escenario virtual 3D que representa una  prisión espacial con las siguientes instancias: 
-- **Prisioneros**: son enemigos entre sí, cada uno de ello puede ser controlado por un jugador o una IA. Aparecen de alguno de los puntos de regeneración. Pueden moverse, disparar, apuntar, cambiar de arma, saltar, agacharse, correr y volar.
-- **Armas**: recolectables sólo para prisioneros. Existen distintos tipos:
-    1. *Pistola (gun)*, el arma por defecto.
-    2. *Lanzamisiles (launcher)*, lanza unos discos que explotan.
-    3. *Fusil de francotirador (sniper)*, arma de largo alcance.
-    4. *Lanzallamas (flamethower)*, interesante aunque no haya mecánicas de transmisión de fuego.
-    5. *Rifle (rifle)*, arma más pesada pero más estable.
-    6. *Dos pistola (guns)*, a falta de una.
-    7. *Escopeta (shot gun)*, causa daño en un radio más ancho.
-- **Utensilios**: botequines para recuperar salud o el propulsor para poder «volar» con él.
-- **Vigilantes robóticos**: Disparan a los prisioneros y pueden matarlos. 
+Este proyecto es una práctica de la asignatura de Inteligencia Artificial para Videojuegos del Grado en Desarrollo de Videojuegos de la UCM. Consiste en plantear un escenario virtual 3D que representa una prisión espacial con las siguientes instancias: 
+- **Prisioneros**: son enemigos entre sí. Cada uno de ellos puede ser controlado por un jugador o una IA. Aparecen en alguno de los puntos de regeneración establecidos. Pueden moverse, disparar, apuntar, cambiar de arma, saltar, agacharse, correr y volar.
+- **Armas**: objectos recolectables exclusivamente para los prisioneros. Existen distintos tipos:
+    1. *Pistola (gun)*: arma por defecto.
+    2. *Lanzamisiles (launcher)*: arma que lanza unos discos explosivos.
+    3. *Fusil de francotirador (sniper)*: arma de largo alcance.
+    4. *Lanzallamas (flamethower)*: arma que lanza llamas,pero no hay mecánicas de propagación del fuego. .
+    5. *Rifle (rifle)*: arma de mayor estabilidad, aunque también de mayor peso.
+    6. *Dos pistola (guns)*.
+    7. *Escopeta (shot gun)*: arma que produce daño en un radio más ancho.
+- **Utensilios**: botiquines para recuperar salud o el propulsor para poder «volar» con él.
+- **Vigilantes robóticos**: disparan a los prisioneros y pueden matarlos. 
 Distinguimos dos tipos:
     1. Torretas: poderosas pero inmóviles.
     2. Robots flotantes: más déviles pero móviles. 
@@ -41,32 +41,32 @@ Distinguimos dos tipos:
 Se parte de un proyecto base proporcionado por el profesor y disponible en el siguiente repositorio: [fps-online](https://github.com/narratech/fps-online)
 
 A continuación, se enumera una serie de informaciones básicas del repositorio original:
-- *Human_Prefab* representa al jugador humano y *UCM_Bot* es la IA que hay que programar si se quiere tener un bot contra el que enfrentarse.
+- *Human_Prefab* representa al jugador humano.
+- *UCM_Bot* es la IA que hay que programar si se quiere un bot contra el que enfrentarse.
 
 ### Human_Prefab
 - Lo más relevante que puede encontrarse en la raíz del prefab:
-* NetworkObject: identidad de red del jugador.
-* PlayerInput (Input System): componente de Unity que gestiona dispositivos/mapas de entrada.
-* NewMonoBehaviourScript (tu “ClientPlayerMove” real, el hombre es que no está bien puesto): habilita cámara/controles sólo para el propietario, crea el HUD del marcador, etc.
-* PlayerRespawner: maneja muerte/respawn en red (RPC al server y respawn al cliente).
-* ClientNetworkTransform: sincroniza transform (owner authority en tu setup).
-* PlayerHealthSync: sincroniza vida/estado.
-* PlayerVotingSync (solo en Human): sistema de votación/acciones especiales.
-* PlayerNameTag: nombre/kills/deaths en red.
-* ClientNetworkAnimator: Script para hacer animación sincronizada.
-* Rigging / IK / Weapon sync: WeaponIKSync, ThirdPersonWeaponSync, RigBuilder, constraints, etc. Son scripts de sincronización (por ejemplo PlayerHealthSync, ThirdPersonWeaponSync, LocalVisibility...).
-* UI (CanvasScaler, GraphicRaycaster, TMP): el canvas world-space del nametag y elementos.
-* CharacterController: componente nativo de Unity para mover un “personaje tipo cápsula” en el mundo sin usar un Rigidbody. Gestiones colisiones, deslizamiento, movimiento 'cinemático', grounding básico... pero no hace nada más.
-* PlayerCharacterController: Script de este proyecto que hace las veces de MENTE del CharacterController, lee la entrada con PlayerInputHandler, y lo convierte en movimiento, rotación, coordina la cámara, la animación, está pendiente de la salud, muerte, apuntado, etc. 
+* *NetworkObject:* identidad de red del jugador.
+* *PlayerInput (Input System):* componente de Unity que gestiona dispositivos/mapas de entrada.
+* *NewMonoBehaviourScript:* habilita cámara/controles sólo para el propietario, crea el HUD del marcador, etc.
+* *PlayerRespawner:* maneja muerte/respawn en red (RPC al server y respawn al cliente).
+* *ClientNetworkTransform:* sincroniza transform (owner authority en tu setup).
+* *PlayerHealthSync:* sincroniza vida/estado.
+* *PlayerVotingSync (solo en Human):* sistema de votación/acciones especiales.
+* *PlayerNameTag:* nombre/kills/deaths en red.
+* *ClientNetworkAnimator:* Script para hacer animación sincronizada.
+* *Rigging / IK / Weapon sync:* WeaponIKSync, ThirdPersonWeaponSync, RigBuilder, constraints, etc. Son scripts de sincronización (por ejemplo PlayerHealthSync, ThirdPersonWeaponSync, LocalVisibility...).
+* *UI (CanvasScaler, GraphicRaycaster, TMP):* el canvas world-space del nametag y elementos.
+* *CharacterController: componente nativo de Unity para mover un “personaje tipo cápsula” en el mundo sin usar un Rigidbody. Gestiones colisiones, deslizamiento, movimiento 'cinemático', grounding básico... pero no hace nada más.
+* *PlayerCharacterController:* Script de este proyecto que hace las veces de MENTE del CharacterController, lee la entrada con PlayerInputHandler, y lo convierte en movimiento, rotación, coordina la cámara, la animación, está pendiente de la salud, muerte, apuntado, etc. 
 
 ### UCM_Bot
 En UCM_Bot encontramos componentes muy parecidos, aunque se ha añadido FSM como ejemplo de dónde podría ir una máquina de estados que tome las decisiones de ese bot, y BotGameplayActions para hacer las veces de gestor de acciones.
 
 
-
 ## Estructura del proyecto
 
-El repositorio nos proporciona el proyecto organizado de una forma específica en la que destaca la carpeta **FPS** donde contiene todos los assets propios del proyecto. Aquí se encuentran:
+El repositorio nos proporciona el proyecto organizado de una forma específica en la que destaca la carpeta **FPS**, que contiene todos los assets propios del proyecto:
 - Animaciones
 - Arte (fuentes de letra, materiales, modelos, shaders y texturas)
 - Audio
@@ -75,7 +75,7 @@ El repositorio nos proporciona el proyecto organizado de una forma específica e
 - Scripts
 - Tutorials
 
-Dentro de la carpeta *script* se localizan:
+Dentro de la carpeta *script* se localizan las siguientes carpetas:
 - AI
 - Editor
 - Game
@@ -84,58 +84,60 @@ Dentro de la carpeta *script* se localizan:
 - UI
 
 # Planteamiento del problema
-Tenemos un proyecto de Unity 3D que está compuesto por varias escenas: menú inicial, victoria, derrota, escena principal, escena secundaria y escena de prisión.
+Partimos de un proyecto de Unity 3D compuesto por varias escenas: menú inicial, victoria, derrota, escena principal, escena secundaria y escena de prisión.
 
 El flujo del juego se ilustra con el siguiente diagrama:
-<diagrama>
-Intro->prision->?
+```mermaid
+stateDiagram-v2
+    [*] --> IntroMenu : Game launch
+
+    IntroMenu --> PrisionScene : Press **Play** button
+
+    PrisionScene --> WinScene : Victory condition
+    PrisionScene --> LoseScene : Player death
+
+    WinScene --> IntroMenu : Press **Menu** button
+    WinScene --> PrisionScene : Press **Restart** button
+
+    LoseScene --> IntroMenu : Press **Menu** button
+    LoseScene --> PrisionScene : Press **Restart** button
+```
 
 Desarrollamos un prototipo que nos permitirá:
 
-- **A**. Hay un mundo virtual dividido por la malla de navegación de Unity, con las estancias y todos los elementos descritos anteriormente, distribuidos según una serie de puntos representativos del escenario (waypoints). Hay una cámara principal preparada para seguir al protagonista en primera persona desde el comienzo y otra cámara secundaria para tener una vista general de la escena (mini-mapa).
+- **A**.Mundo virtual dividido por la malla de navegación de Unity, con las estancias y todos los elementos distribuidos según una serie de puntos representativos del escenario. Dispone de una cámara en primera persona y otra cámara para tener una vista general de la escena.
 
-- **B**. El agente que controlamos aparece en uno de los puntos predefinidos del escenario y puede moverse por el escenario con todas las acciones de movimiento descritas anteriormente.
+- **B**. El agente que controlamos aparece en uno de los puntos predefinidos del escenario y puede realizar todas las acciones de movimiento descritas anteriormente.
 
-- **C**. La navegación del agente utiliza la malla de navegación de Unity, siendo su comportamiento por defecto intentar recorrer cuidadosamente toda la prisión buscando armas y atacar a otros prisioneros.
+- **C**. La navegación del agente utiliza la malla de navegación de Unity, siendo su comportamiento por defecto intentar recorrer la prisión buscando armas y atacar a otros prisioneros.
 
-- **D**. Para la decisión del agente se usa el código de una máquina de estados finita jerárquica cargada desde un fichero .cs.
+- **D**. La decisión del agente se usa el código de una máquina de estados finita jerárquica cargada desde un fichero .cs.
 
-- **E**. En resumen, el agente trata de maximizar la métrica principal del juego: número de enemigos que he eliminado – número de veces que he sido eliminado, aunque también se mostrarán por pantalla otras métricas interesantes como número de armas conseguidas, número de utensilios conseguidos, número de vigilantes robóticos eliminados… todo ello con el contexto de la duración de la partida en segundos y el ratio de fotogramas por segundo.
+- **E**. El agente busca maximizar la métrica principal del juego: *número de enemigos eliminado – número de veces que he sido eliminado*. También se muestran por pantalla otras métricas interesantes como número de armas conseguidas, número de utensilios conseguidos, número de vigilantes robóticos eliminados… todo ello con el contexto de la duración de la partida en segundos y el ratio de fotogramas por segundo.
 
 # Diseño de la solución
 
-## Menú
-![Interfaz](DocImages/menu.png)
-| Elemento | Tipo | Funcionalidad |
-|----------|------|--------------|
-|Tamaño|Selector|Seleccionar el tamaño del laberinto|
-|Minotauros|Selector|Seleccionar el número de minotauros que se van a colocar en la escena|
-|Comenzar|Botón|Crear el laberinto y comenzar la simulación|
-
-## HUD
-![Interfaz](DocImages/juego.png)
-
-## Controles
+## Controles del juego
 |Input|Función|
 |--|--|
-|Ratón|Mover Teseo hacia el cursor|
-|Clic izquierdo ratón|Correr con mayor velocidad (1.5x)|
-|Rueda ratón|Zoom|
-|F|Cambiar el FPS de la simulación|
-|R|Reiniciar simulación con los presets de este laberinto|
-|C|Cambiar de heurística|
+| Ratón | Rotación de la cámara. |
+| Clic izquierdo del ratón | Atacar con el arma actualmente equipada. |
+| Clic derecho del ratón | Activar el zoom para apuntar con el arma equipada en ese momento. |
+| Rueda del ratón / Teclas de número / E / Q | Cambiar de arma. |
+| Tab / P | Activar o desactivar el menú de opciones / pausa. |
+| WASD/ Flechas| Movimiento del personaje. |
+| C | Agachar. |
+| Barra espaciadora (Space) | Saltar/ Jetpack. |
+| Shift| Correr a mayor velocidad. |
 
 # Implementación
 Los siguientes scripts han sido desarrollados por el equipo durante la práctica:
  
 |Script|Tipo|Definición|
 |--|--|--|
-|Vigia|*Comportamiento*|Rotar aleatoriamente de forma periódica|
-|Patrullero|*Comportamiento*|Caminar hacia delante y cambiar la dirección aleatoriamente en un cruce|
-|VisionMinotauro|*Componente auxiliar*|Cono de visión de cada enemigo, sirve para comprobar si Teseo es visto|
-|IAMinotauro| *Controlador IA* | Controlador de la IA del Minotauro. Gestiona el cambio entre el estado habitual y perseguir a Teseo. |
+TODO
 
-## **Comportamientos implementados**
+## **Comportamientos**
 ### Máquina de estados finitos (FSM)
 - Modelo computacional que representa un sistema con un número limitado de estados y que solo puede estar en uno a la vez. 
 - Cambia de estado según las entradas actuales y las reglas de transición.
@@ -257,7 +259,7 @@ class MyCondition extends Condition:
     # store datas we want to test
 
     function test() -> bool:
-        # our logic
+    # our logic
 ``` 
 
 ### Máquina de estados jerárquica (HFSM)
@@ -439,11 +441,13 @@ class SubMachineState: extends State, HierarchicalStateMachine:
 ## Implementación de cada apartado
 
 ### Apartado A
-
+TODO
 
 ### Apartado B
+TODO
 
 ### Apartado C
+TODO
 
 ### Apartado D
 El comportamiento del agente inteligente se ha implementado mediante una **máquina de estados finita jerárquica (HFSM)**, cuyo objetivo es gestionar de forma estructurada y eficiente la toma de decisiones dentro del entorno dinámico.
@@ -611,6 +615,7 @@ El uso de una máquina de estados jerárquica aporta múltiples beneficios:
 ---
 
 ### Apartado E
+TODO
 
 ## Evolución
 |**Estado**|**Tarea**|**Fecha**|
@@ -621,24 +626,40 @@ El uso de una máquina de estados jerárquica aporta múltiples beneficios:
 A continuación se detalla un plan de pruebas para verificar que se cumplen todos los requisitos del enunciado. Se organiza por apartados (A–E) según las características.
 
 - **Apartado A**
-Hay un navmesh puesto ya en la escena principal, lo que puede que no esté son las waypoints. La cámara en primera persona está hecha ya, falta una segunda cámara como minimapa o cámara 3D no sé a qué se refiere
+    1. Verificar que todas las armas, utensilios y vigilantes robóticos aparecen en sus posiciones designadas.
+    2. Confirmar que la cámara en primera persona sigue al protagonista correctamente.
+    3. Confirmar que la cámara secundaria (minimapa) muestra una vista general de la escena desde arriba.
+    4. Verificar que el minimapa se actualiza en tiempo real conforme el agente se desplaza.
     ---
 - **Apartado B**
-Generación de los agentes que son capaces de realizar todo lo descrito
+    1. Confirmar que el agente controlado por el jugador aparece en uno de los puntos predefinidos del escenario.
+    2. Comprobar que el personaje se puede mover correctamente (WASD).
+    3. Comprobar que el personaje puede disparar y cambiar de arma.
+    4. Comprobar que el personaje puede correr, volar, agacharsee y saltar.
     ---
 - **Apartado C**
-Navegación del agente 
+    1. Confirmar que el agente recorre la prisión de manera autónoma.
+    2. Verificar que el agente evita obstáculos y paredes correctamente.
+    3. Verificar que el agente no se queda atascado en un solo lugar.
+    4. Confirmar que el agente se dirige hacia las armas y las recoge.
+    5. Confirmar que el agente detecta a otros prisioneros enemigos y los atacan.
     ---
 - **Apartado D**
-Toma de decisiones
+    1. Confirmar que la máquina de estados finita jerárquica(HFSM) se carga correctamente desde el fichero externo.
+    2. Verificar que todos los estados y transiciones están definidos sin errores.
+    3. Comprobar que el agente cambia de estado adecuadamente según las condiciones.
     ---
 - **Apartado E**
-
+    1. Confirmar que al eliminar un enemigo, el número de enemigos eliminados aumenta en 1.
+    2. Verificar que al morir el agente, el número de veces eliminado aumenta en 1.
+    3. Confirmar que al recoger un arma, el número de armas conseguidas aumenta.
+    4. Confirmar que al eliminar una torreta o un robot flotante, el número de vigilantes eliminados aumenta.
+    5. Verificar que todas las métricas se muestran y se actualizan correctamente en el HUD.
         
 ## Conclusiones
 
 ### Vídeo explicativo
-[Vídeo de demostración en YouTube](https://youtu.be/n7ElxGUhQ7Y)
+[Vídeo de demostración en YouTube]TODO
     
 ## Licencia
 - Uso educativo y de investigación - UCM

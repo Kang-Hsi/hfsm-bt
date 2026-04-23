@@ -454,7 +454,7 @@ El comportamiento del agente inteligente se ha implementado mediante una **máqu
 
 #### D.1. Enfoque general
 
-Se ha optado por un diseño jerárquico en lugar de una máquina de estados plana, con el fin de mejorar la modularidad, escalabilidad y mantenibilidad del sistema. Este enfoque permite separar:
+Se ha optado este diseño jerárquico por su modularidad, escalabilidad y mantenibilidad del sistema. Este enfoque permite separar:
 
 - *Decisiones estratégicas (alto nivel):* determinan el objetivo global del agente.
 - *Decisiones tácticas (bajo nivel):* definen cómo se ejecuta dicho objetivo en función del contexto actual.
@@ -469,7 +469,7 @@ La máquina de estados global actúa como el núcleo del sistema de decisión y 
 * **Explorar:** comportamiento por defecto. El agente recorre el entorno utilizando la malla de navegación de Unity y waypoints, explorando distintas estancias y buscando recursos o enemigos.
 * **Combatir:** se activa cuando el agente detecta enemigos. En este estado se gestionan todas las acciones de ataque.
 * **Supervivencia:** prioriza la supervivencia del agente cuando su salud es baja.
-* **Reequipar:** se encarga de la búsqueda y adquisición des armas.
+* **Reequipar:** se encarga de la búsqueda y adquisición de armas.
 
 Las transiciones entre estos estados se basan en condiciones del entorno y del propio agente, tales como la visibilidad de enemigos, la candidad de vida o la disponibilidad de munición.
 ```mermaid
@@ -517,71 +517,142 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
 
     Es la más compleja del sistema y controla las interacciones directas con otros agentes. Incluye los siguientes estados:
 
-    - **Decidir:** evalúa la situación inicial y decide la acción más adecuada.
-    - **Perseguir:** el agente persigue al enemigo cuando no está en rango de ataque.
-    - **Atacar:** ejecución de acciones ofensivas como apuntar, disparar y moverse lateralmente.
-    - **Cubrir:** búsqueda de cobertura cuando el agente se encuentra en desventaja.
-    - **Retirar:** retirada estratégica en situaciones críticas.
+    - **Decidir:** evalúa las condiciones de vida del agente y la presencia de enemigos para determinar si debe continuar combatiendo o salir del combate.
+    - **SeleccionarObjetivo:** decide cual es el enemigo objetivo. Selecciona al de menor vida como objetivo prioritario. 
+    - **Perseguir:** el agente persigue al objetivo seleccionado cuando se encuentra fuera del rango de ataque y dentro del rango de visión. 
+    - **Atacar:** ejecución de acciones ofensivas contra el objetivo actual: apuntar, disparar y moverse lateralmente. 
     ```mermaid
-    stateDiagram-v2
+    ---
+    config:
+    theme: base
+    look: neo
+    ---
+    stateDiagram
+    direction TB
+    state VidaSuficiente? <<choice>>
+    state HayEnemigo? <<choice>>
+    state EnemigoCerca? <<choice>>
     [*] --> Decidir
-
-    Decidir --> Atacar : en rango
-    Decidir --> Perseguir : lejos
-    Decidir --> Cubrir : desventaja
-    Decidir --> Retirar : vida baja
-
-    Perseguir --> Atacar : visible
-    Perseguir --> Decidir : pierde objetivo
-
-    Atacar --> Cubrir : mucho daño
-    Atacar --> Perseguir : pierde visión
-    Atacar --> Retirar : vida baja
-
-    Cubrir --> Atacar : ventaja
-    Cubrir --> Retirar : presión
-
-    Retirar --> Decidir : recuperado
+    Decidir --> VidaSuficiente?:VidaSuficiente?
+    VidaSuficiente? --> [*]:vida baja
+    VidaSuficiente? --> HayEnemigo?:vida suficiente
+    HayEnemigo? --> [*]:no hay enemigo
+    HayEnemigo? --> EnemigoCerca?:hay enemigo
+    EnemigoCerca? --> Perseguir:enemigo lejos
+    EnemigoCerca? --> SeleccionarObjetivo:enemigo cerca
+    SeleccionarObjetivo --> Atacar:enemigo objetivo cerca
+    SeleccionarObjetivo --> Perseguir:enemigo objetivo lejos
+    SeleccionarObjetivo --> [*]:no hay enemigo
+    Perseguir --> Atacar:enemigo cerca
+    Perseguir --> SeleccionarObjetivo:enemigo perdido
+    Atacar --> SeleccionarObjetivo:enemigo muerto
+    style Decidir fill:transparent
+    style Perseguir fill:#BBDEFB
+    style SeleccionarObjetivo fill:#FFCDD2
+    style Atacar fill:#C8E6C9
     ```
 ---
 
 - **3.2. Submáquina de Supervivencia**
-    Gestiona el comportamiento defensivo del agente:
-    - **Evadir:** evasión para evitar daño.
+    Gestiona el comportamiento defensivo del agente cuando tiene vida baja:
+    - **Evadir:** el agente huye del peligro usando los recursos disponibles.
     - **BuscarBotequín:** buscar de botiquines en el entorno.
-    - **Esconder:** permanecer en zonas seguras hasta recuperar condiciones favorables.
+    - **UsarBotiquín:** una vez encontrado el botiquín el agente lo usa para recuperar vida. Tras usarlo, se evalúa la situación: 
+        - El agente sale del estado de supervivencia si se cumple: La vida es suficiente  y hay un enemigo cerca o ha alcanzado la vida máxima.
+        - Si no se cumple ninguna, sigue buscando.
+
     ```mermaid
-    stateDiagram-v2
-    [*] --> Evadir
+    ---
+    config:
+    theme: base
+    look: neo
+    ---
+    stateDiagram
+    direction TB
+    state BotiquinCerca? <<choice>>
+    state PuedoVolar? <<choice>>
+    state EnemigoCerca? <<choice>>
+    state EnemigoCerca2? <<choice>>
+    state VidaMaxima? <<choice>>
+    state VidaSuficiente? <<choice>>
 
-    Evadir --> BuscarBotequín : detecta botiquín
-    BuscarBotequín --> Esconder : recuperando
-    Esconder --> Evadir : peligro
+    [*] --> EnemigoCerca?:Enemigo Cerca?
+    EnemigoCerca? --> Evadir:SI
+    EnemigoCerca? --> BuscarBotiquin:NO
 
-    Esconder --> [*] : recuperado
+    Evadir --> PuedoVolar?:Puedo volar?
+    PuedoVolar? --> UsarPropulsor:SI
+    PuedoVolar? --> Correr:NO
+
+    UsarPropulsor --> EnemigoCerca?
+    Correr --> EnemigoCerca?
+
+    BuscarBotiquin --> BotiquinCerca?:BotiquínCerca?
+    BotiquinCerca? --> UsarBotiquin:SI
+    BotiquinCerca? --> BuscarBotiquin:NO
+
+    UsarBotiquin --> VidaMaxima? : VidaMaxima?
+
+    VidaMaxima? --> [*]: SI, vida maxima
+    VidaMaxima? --> EnemigoCerca2?: NO
+    
+    EnemigoCerca2? --> VidaSuficiente?
+    VidaSuficiente? --> Evadir : vida baja o no enemigo cerca
+    VidaSuficiente? --> UsarBotiquin: no hay enemigo
+    VidaSuficiente? --> [*] : vida suficiente y hay enemigo cerca
+
+    style Evadir fill:#FFCDD2
+    style BuscarBotiquin fill:#FFF9C4
+    style UsarPropulsor fill:#BBDEFB
+    style Correr fill:#FFE0B2
+    style UsarBotiquin fill:#C8E6C9
     ```
 ---
 
 - **3.3. Submáquina de Reequipamiento**
     Encargada de optimizar el equipamiento del agente en función de la situación del entorno, mejorando tanto su capacidad ofensiva como su supervivencia y movilidad:
 
-    - **BuscarArma:** localización y recogida de armas disponibles en el entorno.
-    - EvaluateWeapon: análisis del arma actual en comparación con otras disponibles, teniendo en cuenta factores como distancia al enemigo o tipo de combate.
-    - **ElegirArma:** selección y cambio al arma más adecuada según la situación.
-    - **BuscarUtilidad:** búsqueda de utensilios como botiquines o el jetpack, que permiten mejorar la supervivencia o movilidad del agente.
-    - **UsarPropulsor:** activación y uso del jetpack en situaciones donde proporciona ventaja táctica.
-
-    El uso del jetpack introduce una mejora significativa en la movilidad del agente, permitiéndole acceder a zonas elevadas, escapar de situaciones de peligro o reposicionarse estratégicamente durante el combate.
+    - **Evaluar:** detecta hay algun objeto que se pueda recoger en el entorno.
+    - **Gestión de armas:** selección y cambio al arma más adecuada según la situación. SI detecta un arma cercano: 
+        - Si dispone espacio en el inventario, la recoge directamente.
+        - Si el inventario está lleno, considera el arma y decide si lo cambia o no.
+    - **Gestión Utilidad:** si no hay armas, el agente comprueba la presencia de utilidades: Propulsor y Botiquin. Si está disponible, lo recoge y vuelve a evaluar el entorno.
 
     ```Mermaid
-    stateDiagram-v2
-    [*] --> BuscarArma : sin arma
+    ---
+    config:
+    theme: base
+    look: neo
+    ---
+    stateDiagram
+    direction TB
+    [*] --> Evaluar
 
-    BuscarArma --> ElegirArma
-    ElegirArma --> [*]
+    state ArmaCerca <<choice>>
+    state MaximoArma <<choice>>
+    state JetpackCerca <<choice>>
+    state BotiquinCerca <<choice>>
 
-    [*] --> UsarPropulsor : necesita ventaja
-    UsarPropulsor --> [*]
+    Evaluar --> ArmaCerca: ArmaCerca?
+
+    ArmaCerca --> MaximoArma: SI
+    ArmaCerca --> JetpackCerca: No, JetpackCerca?
+
+    MaximoArma --> PillarArma: Hay hueco
+    MaximoArma --> CambiarArma: InventarioLleno
+
+    PillarArma --> Evaluar
+    CambiarArma --> Evaluar
+
+    JetpackCerca --> RecogerPropulsor: SI
+    JetpackCerca --> BotiquinCerca: No, BotiquinCerca?
+
+    RecogerPropulsor --> Evaluar
+
+    BotiquinCerca --> RecogerBotiquin: SI
+    BotiquinCerca --> [*]: No hay nada
+
+    RecogerBotiquin --> Evaluar
     ```
 ---
 

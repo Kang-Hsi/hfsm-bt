@@ -466,12 +466,11 @@ La arquitectura se compone de una **máquina de estados principal (global)** y v
 
 La máquina de estados global actúa como el núcleo del sistema de decisión y determina el estado general del agente en cada instante. Los estados principales definidos son:
 
-* **Explorar:** comportamiento por defecto. El agente recorre el entorno utilizando la malla de navegación de Unity y waypoints, explorando distintas estancias y buscando recursos o enemigos.
-* **Combatir:** se activa cuando el agente detecta enemigos. En este estado se gestionan todas las acciones de ataque.
-* **Supervivencia:** prioriza la supervivencia del agente cuando su salud es baja.
-* **Reequipar:** se encarga de la búsqueda y adquisición de armas.
+**Explorar:** comportamiento por defecto. El agente recorre el entorno utilizando la malla de navegación de Unity y waypoints, explorando distintas estancias, buscando recursos y evaluando oportunidades.
+**Combatir:** se activa cuando el agente detecta enemigos. En este estado se gestionan todas las acciones ofensivas.
+**Supervivencia:** prioriza la supervivencia del agente cuando su salud es baja, forzando comportamientos defensivos.
 
-Las transiciones entre estos estados se basan en condiciones del entorno y del propio agente, tales como la visibilidad de enemigos, la candidad de vida o la disponibilidad de munición.
+Las transiciones entre estos estados se basan en condiciones del entorno y del propio agente, tales como la visibilidad de enemigos o la cantidad de vida.
 ```mermaid
 ---
 config:
@@ -482,29 +481,22 @@ stateDiagram
   direction TB
   state VidaSuficiente? <<choice>>
   state HayEnemigo? <<choice>>
-  state HayEnemigo1? <<choice>>
+
   [*] --> Explorar
-  Explorar --> Supervivencia:vida baja
-  Explorar --> Combatir:enemigo visible
-  Explorar --> Reequipar:arma cerca
 
-  Supervivencia --> VidaSuficiente?:He recuperado sufiente vida?
-  VidaSuficiente? --> Supervivencia:No
-  VidaSuficiente? --> Explorar:Sí
+  Explorar --> Supervivencia: vida baja
+  Explorar --> Combatir: enemigo visible
 
-  Combatir --> HayEnemigo?: Hay enemigos?
+  Supervivencia --> VidaSuficiente?: ¿vida suficiente?
+  VidaSuficiente? --> Supervivencia: No
+  VidaSuficiente? --> Explorar: Sí
+
+  Combatir --> HayEnemigo?: ¿hay enemigos?
   HayEnemigo? --> Combatir: Sí
   HayEnemigo? --> Explorar: No
 
-  Reequipar --> HayEnemigo1?: Hay enemigos?
-  HayEnemigo1? --> Combatir: Sí
-  HayEnemigo1? --> Explorar: No
-
-
-  Rojo>Naranja>Verde
   style Explorar fill:transparent
   style Supervivencia fill:#FFCDD2
-  style Reequipar fill:#C8E6C9
   style Combatir fill:#FFE0B2
 ```
 ---
@@ -609,8 +601,8 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     ```
 ---
 
-- **3.3. Submáquina de Reequipamiento**
-    Encargada de optimizar el equipamiento del agente en función de la situación del entorno, mejorando tanto su capacidad ofensiva como su supervivencia y movilidad:
+- **3.3. Submáquina de Exploración**
+    Encargada de gestionar de forma oportunista los recursos del entorno durante la exploración, permitiendo al agente recoger, evaluar y actualizar su equipamiento en función de la situación, con el objetivo de mejorar su capacidad ofensiva, su supervivencia y su movilidad:
 
     - **Evaluar:** detecta hay algun objeto que se pueda recoger en el entorno.
     - **Gestión de armas:** selección y cambio al arma más adecuada según la situación. SI detecta un arma cercano: 
@@ -656,39 +648,6 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     ```
 ---
 
-- **3.4. Submáquina de Exploración**
-
-    Controla el desplazamiento por el entorno:
-
-    - **Patrullar:** recorrido de puntos clave del mapa.
-    - **BuscarRecursos:** búsqueda de recursos cercanos.
-    - **Investigar:** inspección de eventos relevantes como sonidos o combates cercanos.
-    ```mermaid
-    stateDiagram-v2
-    [*] --> Patrullar
-
-    Patrullar --> BuscarRecursos : recurso detectado
-    Patrullar --> Investigar : evento detectado
-
-    BuscarRecursos --> Patrullar : sin recursos cercanos
-    BuscarRecursos --> Investigar : evento cercano
-
-    Investigar --> Patrullar : sin evento
-    Investigar --> BuscarRecursos : recurso detectado
-    ```
----
-
-#### D.4. Integración con el sistema
-
-La máquina de estados no actúa de forma aislada, sino que se integra con otros subsistemas del agente:
-
-- **Navegación (NavMesh):** utilizada para el movimiento entre posiciones.
-- Proporciona información sobre enemigos, objetos y eventos del entorno.
-- Almacena variables compartidas como salud, munición o posiciones de interés.
-Cada actualización del agente consiste en evaluar el estado actual, comprobar las condiciones de transición y ejecutar la lógica asociada al estado activo.
-
----
-
 #### D.5. Ventajas del enfoque
 
 El uso de una máquina de estados jerárquica aporta múltiples beneficios:
@@ -707,6 +666,7 @@ TODO
 |**Estado**|**Tarea**|**Fecha**|
 |--|--|--|
 |✔|Preparación: Primer contacto y creación del repositorio|9-4-2026|
+|✔|Documentación: Actualizar readme|23-4-2026|
 ## Pruebas y métricas
 
 A continuación se detalla un plan de pruebas para verificar que se cumplen todos los requisitos del enunciado. Se organiza por apartados (A–E) según las características.

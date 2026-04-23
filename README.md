@@ -468,27 +468,44 @@ La máquina de estados global actúa como el núcleo del sistema de decisión y 
 
 * **Explorar:** comportamiento por defecto. El agente recorre el entorno utilizando la malla de navegación de Unity y waypoints, explorando distintas estancias y buscando recursos o enemigos.
 * **Combatir:** se activa cuando el agente detecta enemigos. En este estado se gestionan todas las acciones de ataque.
-* **Sobrevivir:** prioriza la supervivencia del agente cuando su salud es baja.
-* **Reequipar:** se encarga de la búsqueda y adquisición de armas o botequín cuando el agente no dispone de recursos adecuados.
+* **Supervivencia:** prioriza la supervivencia del agente cuando su salud es baja.
+* **Reequipar:** se encarga de la búsqueda y adquisición des armas.
 
 Las transiciones entre estos estados se basan en condiciones del entorno y del propio agente, tales como la visibilidad de enemigos, la candidad de vida o la disponibilidad de munición.
 ```mermaid
-stateDiagram-v2
-    [*] --> Explorar
+---
+config:
+  theme: base
+  look: neo
+---
+stateDiagram
+  direction TB
+  state VidaSuficiente? <<choice>>
+  state HayEnemigo? <<choice>>
+  state HayEnemigo1? <<choice>>
+  [*] --> Explorar
+  Explorar --> Supervivencia:vida baja
+  Explorar --> Combatir:enemigo visible
+  Explorar --> Reequipar:arma cerca
 
-    Explorar --> Combatir : enemigo visible
-    Explorar --> Reequipar : sin arma
-    Explorar --> Sobrevivir : vida baja
+  Supervivencia --> VidaSuficiente?:He recuperado sufiente vida?
+  VidaSuficiente? --> Supervivencia:No
+  VidaSuficiente? --> Explorar:Sí
 
-    Combatir --> Sobrevivir : a punto de morir
-    Combatir --> Reequipar : sin munición
-    Combatir --> Explorar : sin enemigos
+  Combatir --> HayEnemigo?: Hay enemigos?
+  HayEnemigo? --> Combatir: Sí
+  HayEnemigo? --> Explorar: No
 
-    Sobrevivir --> Explorar : recuperado
-    Sobrevivir --> Combatir : enemigo cercano
+  Reequipar --> HayEnemigo1?: Hay enemigos?
+  HayEnemigo1? --> Combatir: Sí
+  HayEnemigo1? --> Explorar: No
 
-    Reequipar --> Combatir : enemigo visible
-    Reequipar --> Explorar : equipado
+
+  Rojo>Naranja>Verde
+  style Explorar fill:transparent
+  style Supervivencia fill:#FFCDD2
+  style Reequipar fill:#C8E6C9
+  style Combatir fill:#FFE0B2
 ```
 ---
 
@@ -558,12 +575,10 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
 
     ```Mermaid
     stateDiagram-v2
-    [*] --> BuscarArma
+    [*] --> BuscarArma : sin arma
 
     BuscarArma --> ElegirArma
-    ElegirArma --> BuscarUtilidad
-
-    BuscarUtilidad --> [*] : equipado
+    ElegirArma --> [*]
 
     [*] --> UsarPropulsor : necesita ventaja
     UsarPropulsor --> [*]
@@ -657,7 +672,16 @@ A continuación se detalla un plan de pruebas para verificar que se cumplen todo
     5. Verificar que todas las métricas se muestran y se actualizan correctamente en el HUD.
         
 ## Conclusiones
+En esta práctica se ha desarrollado un prototipo funcional que integra distintos conceptos fundamentales de la Inteligencia Artificial aplicada a videojuegos dentro de un entorno interactivo en Unity. A través del escenario del laberinto del Minotauro, se han implementado y combinado técnicas clásicas de **decisión** como **Máquina de estados jerárquica**,
+navegación usando **malla de navegación** que ofrece Unity combinado con **waypoints** y comportamientos de dirección (**steering behaviors**).
 
+Uno de los aspectos más relevantes ha sido la modularidad de la máquina de estados jerárquica, que ha permitido diseñar **orientado a datos** estados independientes usando el `Scriptable Object` de Unity, facilitando su reutilización y extensión. Es una buena práctica porque está muy relacionado con prácticas habituales en la industria.
+
+Además, la incorporación de las métricas ha permitido observar cómo se actúa nuestro agente en diferentes situaciones. Con estos datos podemos descubrir qué estados necesitarían ser mejorados o modificados.
+
+Durante el desarrollo se han abordado problemas típicos como la diferencia entre acción y transición o la transición no esperada entre un subestado de un estado a otro estado externo, consolidando así una comprensión práctica de estos sistemas.
+
+En conjunto, la práctica no solo cumple los objetivos planteados, sino que también sirve como base sólida para futuras ampliaciones, como la introducción de comportamientos más complejos (árboles de comportamiento) o mejoras en la percepción y toma de decisiones de los agentes.
 ### Vídeo explicativo
 [Vídeo de demostración en YouTube]TODO
     
@@ -672,10 +696,15 @@ A continuación se detalla un plan de pruebas para verificar que se cumplen todo
 
 ### Bibliografía
 * Millington, I. (2019). *AI for Games* (3.ª ed.). CRC Press. 
-* de Byl, P.: Finite State Machines (URL)
-poner mas
+* de Byl, P.: [*Finite State Machines*](https://learn.unity.com/project/finite-state-machines-1)
+* Kyong-Sok (KC) Chang & David Zhu. [*2.3 Finite State Machine (FSM)
+Concept and Implementation*](https://web.stanford.edu/class/cs123/lectures/CS123_lec07_Finite_State_Machine.pdf). Stanford University (cs123.stanford.edu)
 ### Recursos y assets
-* Unity: Introduction to Visual Scripting (URL)
-* Unity: Script Machines and State Machines (URL)
+*  Unity: [*Introduction to Visual Scripting*](https://learn.unity.com/project/introduction-to-visual-scripting)
+* Unity: [*State machines in Visual Scripting*](https://learn.unity.com/tutorial/state-machines-in-visual-scripting?version=2022.3)
+* Unity Learn: [*Finite State Machine*](https://learn.unity.com/course/finite-state-machines-1)
+
 ### Videojuegos referentes
-Poner algun juego
+* [Bungie.net](https://www.bungie.net/7) (2001). *Halo: Combat Evolved.* (IA de enemigos)
+* [Riot Game](https://www.riotgames.com/es) (2009). [*League Of Legends.*](https://www.leagueoflegends.com/es-es/) (IA de minions)
+* [Team Cherry](https://www.teamcherry.com.au/) (2017).[*Hollow Knight*](https://www.hollowknight.com/) (IA de bosses)

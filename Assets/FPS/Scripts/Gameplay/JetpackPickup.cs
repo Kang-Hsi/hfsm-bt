@@ -14,5 +14,10 @@
                 Destroy(gameObject);
             }
         }
+
+        protected override void RemoveFromWaypoints()
+        {
+            WaypointsManager.Instance.jetpackWaypoints.Remove(gameObject);
+        }
     }
 }

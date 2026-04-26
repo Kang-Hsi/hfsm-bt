@@ -19,5 +19,10 @@ namespace Unity.FPS.Gameplay
                 Destroy(gameObject);
             }
         }
+
+        protected override void RemoveFromWaypoints()
+        {
+            WaypointsManager.Instance.medkitWaypoints.Remove(gameObject);
+        }
     }
 }

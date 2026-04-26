@@ -59,7 +59,15 @@ namespace Unity.FPS.Gameplay
                 PickupEvent evt = Events.PickupEvent;
                 evt.Pickup = gameObject;
                 EventManager.Broadcast(evt);
+
+                RemoveFromWaypoints();
             }
+        }
+
+        protected virtual void RemoveFromWaypoints()
+        {
+            // Base implementation does nothing
+            // Each subclass overrides this
         }
 
         protected virtual void OnPicked(PlayerCharacterController playerController)
@@ -83,6 +91,7 @@ namespace Unity.FPS.Gameplay
             }
 
             m_HasPlayedFeedback = true;
+
         }
     }
 }

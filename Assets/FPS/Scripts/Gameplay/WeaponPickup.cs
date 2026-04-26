@@ -38,6 +38,11 @@ namespace Unity.FPS.Gameplay
             }
         }
 
+        protected override void RemoveFromWaypoints()
+        {
+            WaypointsManager.Instance.weaponWaypoints.Remove(gameObject);
+        }
+
         // --- FUNCIÓN PÚBLICA (Para que la llame el script de red) ---
         public bool GrantWeapon(PlayerCharacterController byPlayer)
         {

@@ -17,7 +17,7 @@
 
         protected override void RemoveFromWaypoints()
         {
-            WaypointsManager.Instance.jetpackWaypoints.Remove(gameObject);
+            WaypointsManager.Instance.jetpackWaypoints.Remove(gameObject.transform);
         }
     }
 }

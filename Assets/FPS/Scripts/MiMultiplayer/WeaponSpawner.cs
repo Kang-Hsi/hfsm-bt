@@ -55,9 +55,6 @@ namespace Unity.FPS.Gameplay
             // 2. La instanciamos físicamente en la posición del spawner
             GameObject spawnedObject = Instantiate(weaponPrefab, transform.position, transform.rotation);
 
-            // Registrar la instancia en waypoints
-            WaypointsManager.Instance.weaponWaypoints.Add(spawnedObject);
-
             // 3. Le decimos al servidor que la haga aparecer en todas las pantallas
             currentSpawnedWeapon = spawnedObject.GetComponent<NetworkObject>();
             if (currentSpawnedWeapon != null)

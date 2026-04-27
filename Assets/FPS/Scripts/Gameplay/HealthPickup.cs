@@ -22,7 +22,7 @@ namespace Unity.FPS.Gameplay
 
         protected override void RemoveFromWaypoints()
         {
-            WaypointsManager.Instance.medkitWaypoints.Remove(gameObject);
+            WaypointsManager.Instance.medkitWaypoints.Remove(gameObject.transform);
         }
     }
 }

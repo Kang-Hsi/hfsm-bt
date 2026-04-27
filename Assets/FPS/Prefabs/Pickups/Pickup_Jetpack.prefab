@@ -101,7 +101,8 @@ MonoBehaviour:
   BobbingAmount: 0.3
   RotatingSpeed: 360
   PickupSfx: {fileID: 8300000, guid: 9c793d7183ca03e4fbf328175291cee4, type: 3}
-  PickupVfxPrefab: {fileID: 0}
+  PickupVfxPrefab: {fileID: 133326187904302500, guid: 4d1efaa062e333f4cbc4c3564702d135,
+    type: 3}
 --- !u!114 &2767503387858999705
 MonoBehaviour:
   m_ObjectHideFlags: 0

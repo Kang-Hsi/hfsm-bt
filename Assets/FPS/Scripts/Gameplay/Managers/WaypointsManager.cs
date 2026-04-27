@@ -16,22 +16,22 @@ namespace Unity.FPS.Gameplay
 
         [Header("Weapon Waypoints")]
         [Tooltip("Locations where weapons can be picked up")]
-        public List<GameObject> weaponWaypoints = new List<GameObject>();
+        public List<Transform> weaponWaypoints = new List<Transform>();
 
         [Header("Utility Waypoints")]
         [Tooltip("Locations where medkits can be found")]
-        public List<GameObject> medkitWaypoints = new List<GameObject>();
+        public List<Transform> medkitWaypoints = new List<Transform>();
 
         [Tooltip("Locations where jetpacks can be found")]
-        public List<GameObject> jetpackWaypoints = new List<GameObject>();
+        public List<Transform> jetpackWaypoints = new List<Transform>();
 
         [Header("Respawn Waypoints")]
         [Tooltip("Possible respawn points for prisoners after death")]
-        public List<GameObject> respawnWaypoints = new List<GameObject>();
+        public List<Transform> respawnWaypoints = new List<Transform>();
 
         [Header("Patrol Waypoints")]
         [Tooltip("Points used for patrol routes when no specific target is available")]
-        public List<GameObject> patrolWaypoints = new List<GameObject>();
+        public List<Transform> patrolWaypoints = new List<Transform>();
 
         [Header("Configuration")]
         [Tooltip("Distance threshold to consider a waypoint as reached")]
@@ -68,32 +68,46 @@ namespace Unity.FPS.Gameplay
         /// </summary>
         void CollectWaypoints()
         {
+            weaponWaypoints.Clear();
+            medkitWaypoints.Clear();
+            jetpackWaypoints.Clear();
+            respawnWaypoints.Clear();
+            patrolWaypoints.Clear();
+
             // Collect all weapon spawn points
             WeaponPickup[] weapons = FindObjectsOfType<WeaponPickup>();
             foreach (WeaponPickup weapon in weapons)
             {
-                weaponWaypoints.Add(weapon.gameObject);
+                weaponWaypoints.Add(weapon.transform);
             }
 
             // Collect all medkit locations
             HealthPickup[] medkits = FindObjectsOfType<HealthPickup>();
             foreach (HealthPickup medkit in medkits)
             {
-                medkitWaypoints.Add(medkit.gameObject);
+                medkitWaypoints.Add(medkit.transform);
             }
 
             // Collect all jetpack locations
             JetpackPickup[] jetpacks = FindObjectsOfType<JetpackPickup>();
             foreach (JetpackPickup jetpack in jetpacks)
             {
-                jetpackWaypoints.Add(jetpack.gameObject);
+                jetpackWaypoints.Add(jetpack.transform);
             }
 
             //// Collect all respawn points
-            respawnWaypoints = GameObject.FindGameObjectsWithTag("RespawnPoint").ToList();
+            var r = GameObject.FindGameObjectsWithTag("RespawnPoint").ToList();
+            foreach (GameObject respawn in r)
+            {
+                respawnWaypoints.Add(respawn.transform);
+            }
 
             //// Collect all patrol points
-            patrolWaypoints = GameObject.FindGameObjectsWithTag("PatrolPoint").ToList();
+            var p = GameObject.FindGameObjectsWithTag("PatrolPoint").ToList();
+            foreach (GameObject pat in p)
+            {
+                patrolWaypoints.Add(pat.transform);
+            }
         }
 
         /// <summary>

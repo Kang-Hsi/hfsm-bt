@@ -40,7 +40,7 @@ namespace Unity.FPS.Gameplay
 
         protected override void RemoveFromWaypoints()
         {
-            WaypointsManager.Instance.weaponWaypoints.Remove(gameObject);
+            WaypointsManager.Instance.weaponWaypoints.Remove(gameObject.transform);
         }
 
         // --- FUNCIÓN PÚBLICA (Para que la llame el script de red) ---

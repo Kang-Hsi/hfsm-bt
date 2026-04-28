@@ -30,6 +30,7 @@ namespace Unity.FPS.Gameplay
                 m_Health.OnDie += HandleDeath;
                 m_Health.OnDamaged += OnDamaged;
             }
+
         }
 
         public override void OnNetworkSpawn()
@@ -165,7 +166,7 @@ namespace Unity.FPS.Gameplay
 
         void ServerPerformRespawn()
         {
-            GameObject[] spawnPoints = GameObject.FindGameObjectsWithTag("RespawnPoint");
+            GameObject[] spawnPoints = WaypointsManager.Instance.respawnWaypoints;
             Vector3 spawnPos = new Vector3(0, 5, 0);
             Quaternion spawnRot = Quaternion.identity;
 

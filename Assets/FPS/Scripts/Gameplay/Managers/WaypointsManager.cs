@@ -27,7 +27,7 @@ namespace Unity.FPS.Gameplay
 
         [Header("Respawn Waypoints")]
         [Tooltip("Possible respawn points for prisoners after death")]
-        public List<Transform> respawnWaypoints = new List<Transform>();
+        public GameObject[] respawnWaypoints;
 
         [Header("Patrol Waypoints")]
         [Tooltip("Points used for patrol routes when no specific target is available")]
@@ -71,36 +71,31 @@ namespace Unity.FPS.Gameplay
             weaponWaypoints.Clear();
             medkitWaypoints.Clear();
             jetpackWaypoints.Clear();
-            respawnWaypoints.Clear();
             patrolWaypoints.Clear();
 
             // Collect all weapon spawn points
-            WeaponPickup[] weapons = FindObjectsOfType<WeaponPickup>();
+            WeaponPickup[] weapons = FindObjectsByType<WeaponPickup>(FindObjectsSortMode.None);
             foreach (WeaponPickup weapon in weapons)
             {
                 weaponWaypoints.Add(weapon.transform);
             }
 
             // Collect all medkit locations
-            HealthPickup[] medkits = FindObjectsOfType<HealthPickup>();
+            HealthPickup[] medkits = FindObjectsByType<HealthPickup>(FindObjectsSortMode.None);
             foreach (HealthPickup medkit in medkits)
             {
                 medkitWaypoints.Add(medkit.transform);
             }
 
             // Collect all jetpack locations
-            JetpackPickup[] jetpacks = FindObjectsOfType<JetpackPickup>();
+            JetpackPickup[] jetpacks = FindObjectsByType<JetpackPickup>(FindObjectsSortMode.None);
             foreach (JetpackPickup jetpack in jetpacks)
             {
                 jetpackWaypoints.Add(jetpack.transform);
             }
 
             //// Collect all respawn points
-            var r = GameObject.FindGameObjectsWithTag("RespawnPoint").ToList();
-            foreach (GameObject respawn in r)
-            {
-                respawnWaypoints.Add(respawn.transform);
-            }
+            respawnWaypoints = GameObject.FindGameObjectsWithTag("RespawnPoint");
 
             //// Collect all patrol points
             var p = GameObject.FindGameObjectsWithTag("PatrolPoint").ToList();

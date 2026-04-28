@@ -33,7 +33,6 @@ public class BotController : MonoBehaviour
 
     void Update()
     {
-        Debug.Log(waypoints);
         if (waypoints == null || waypoints.Count == 0) return;
 
         float dist = Vector3.Distance(transform.position, waypoints[currentIndex].position);
@@ -63,6 +62,5 @@ public class BotController : MonoBehaviour
         }
 
         agent.SetDestination(waypoints[currentIndex].position);
-        Debug.Log(waypoints[currentIndex].position);
     }
 }

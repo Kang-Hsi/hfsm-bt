@@ -59,8 +59,10 @@ public class BotGameplayActions : MonoBehaviour
         m_PlayerCc = GetComponent<PlayerCharacterController>();
         m_Weapons = GetComponent<PlayerWeaponsManager>();
         m_NavMeshAgent = GetComponent<NavMeshAgent>();
-    }
 
+        InitializeWeaponSystemsIfNeeded();
+        GetComponent<CharacterController>().enabled = true;
+    }
     void OnEnable()
     {
         m_HasLastWorldPosForAnim = false;

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.AI;
 using Unity.FPS.Gameplay;
 using Unity.FPS.Game;
+using System.Collections.Generic;
 
 // =================================================================================================
 // FSM — Plantilla de máquina de estados SIMPLIFICADA Y A FUEGO EN EL CÓDIGO para UCM_Bot  
@@ -59,6 +60,10 @@ public class FSM : NetworkBehaviour
     Health m_Health;
     BotGameplayActions m_Actions;
 
+    //provisional
+    int m_CurrentWeaponIndex = 0;
+    List<Transform> m_WeaponPoints;
+
     // ---------------------------------------------------------------------------------------------
     // Ciclo de vida red / componentes
     // ---------------------------------------------------------------------------------------------
@@ -89,7 +94,10 @@ public class FSM : NetworkBehaviour
             DisableCameraAndAudioForNonOwner();
 
         if (IsServer)
+        {
             StartCoroutine(ServerInitBotWhenGameplaySceneReady());
+            m_WeaponPoints = WaypointsManager.Instance.weaponWaypoints;
+        }
     }
 
     public override void OnNetworkDespawn()
@@ -117,7 +125,7 @@ public class FSM : NetworkBehaviour
         while (elapsed < timeoutSeconds)
         {
             bool navReady = BotGameplayActions.SceneHasNavMeshData();
-            bool actorsReady = Object.FindFirstObjectByType<ActorsManager>() != null;
+            bool actorsReady = FindFirstObjectByType<ActorsManager>() != null;
 
             if (navReady && actorsReady)
                 break;
@@ -158,9 +166,9 @@ public class FSM : NetworkBehaviour
         if (playerInput != null)
             playerInput.enabled = false;
 
-        var cc = GetComponent<CharacterController>();
-        if (cc != null)
-            cc.enabled = false;
+        //var cc = GetComponent<CharacterController>();
+        //if (cc != null)
+        //    cc.enabled = false;
     }
 
     void DisableCameraAndAudioForNonOwner()
@@ -245,7 +253,9 @@ public class FSM : NetworkBehaviour
         if (!needsNewTarget)
             return;
 
-        if (TryPickRandomNavMeshPoint(transform.position, Mathf.Max(2f, m_WanderRadius), out var dest))
+        //if (TryPickRandomNavMeshPoint(transform.position, Mathf.Max(2f, m_WanderRadius), out var dest))
+        //    m_Actions.TryMoveToWorldPosition(dest);
+        if (TryPickAWeapon(transform.position, out var dest))
             m_Actions.TryMoveToWorldPosition(dest);
     }
 
@@ -282,6 +292,7 @@ public class FSM : NetworkBehaviour
         {
             case BotState.Wandering:
                 m_NextRepathTime = 0f;
+                Debug.Log($"Hola, soy {gameObject.name}");
                 break;
 
             case BotState.Dead:
@@ -309,5 +320,22 @@ public class FSM : NetworkBehaviour
 
         result = origin;
         return false;
+    }
+
+    static bool TryPickAWeapon(Vector3 origin, out Vector3 result)
+    {
+        var points = WaypointsManager.Instance.weaponWaypoints;
+        
+        if (points.Count == 0)
+        {
+            result = origin;
+            return false;
+        }
+        else
+        {
+            result = points[0].position;
+            Debug.Log($"transform punto a seguir: {result}");
+            return true;
+        }
     }
 }

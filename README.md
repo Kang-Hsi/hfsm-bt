@@ -85,22 +85,15 @@ Dentro de la carpeta *script* se localizan las siguientes carpetas:
 
 # Planteamiento del problema
 Partimos de un proyecto de Unity 3D compuesto por varias escenas: menú inicial, victoria, derrota, escena principal, escena secundaria y escena de prisión.
-
-El flujo del juego se ilustra con el siguiente diagrama:
+El juego seria infinito, es decir, que se puede revivir cada vez que se muera. El flujo del juego se ilustra con el siguiente diagrama:
 ```mermaid
 stateDiagram-v2
     [*] --> IntroMenu : Game launch
 
     IntroMenu --> PrisionScene : Press **Play** button
 
-    PrisionScene --> WinScene : Victory condition
-    PrisionScene --> LoseScene : Player death
+    PrisionScene --> [*]: Press **Exit** button
 
-    WinScene --> IntroMenu : Press **Menu** button
-    WinScene --> PrisionScene : Press **Restart** button
-
-    LoseScene --> IntroMenu : Press **Menu** button
-    LoseScene --> PrisionScene : Press **Restart** button
 ```
 
 Desarrollamos un prototipo que nos permitirá:
@@ -135,7 +128,8 @@ Los siguientes scripts han sido desarrollados por el equipo durante la práctica
  
 |Script|Tipo|Definición|
 |--|--|--|
-TODO
+|CameraFollow|Component|Controla el seguimiento de la camara segundaria al jugador para la minimapa|
+|Waypoints ||
 
 ## **Comportamientos**
 ### Máquina de estados finitos (FSM)
@@ -511,7 +505,6 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
 
     - **Decidir:** evalúa las condiciones de vida del agente y la presencia de enemigos para determinar si debe continuar combatiendo o salir del combate.
     - **SeleccionarObjetivo:** decide cual es el enemigo objetivo. Selecciona al de menor vida como objetivo prioritario. 
-    - **Perseguir:** el agente persigue al objetivo seleccionado cuando se encuentra fuera del rango de ataque y dentro del rango de visión. 
     - **Atacar:** ejecución de acciones ofensivas contra el objetivo actual: apuntar, disparar y moverse lateralmente. 
     ```mermaid
     ---
@@ -523,21 +516,18 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     direction TB
     state VidaSuficiente? <<choice>>
     state HayEnemigo? <<choice>>
-    state EnemigoCerca? <<choice>>
+
     [*] --> Decidir
     Decidir --> VidaSuficiente?:VidaSuficiente?
-    VidaSuficiente? --> [*]:vida baja
-    VidaSuficiente? --> HayEnemigo?:vida suficiente
-    HayEnemigo? --> [*]:no hay enemigo
-    HayEnemigo? --> EnemigoCerca?:hay enemigo
-    EnemigoCerca? --> Perseguir:enemigo lejos
-    EnemigoCerca? --> SeleccionarObjetivo:enemigo cerca
-    SeleccionarObjetivo --> Atacar:enemigo objetivo cerca
-    SeleccionarObjetivo --> Perseguir:enemigo objetivo lejos
-    SeleccionarObjetivo --> [*]:no hay enemigo
-    Perseguir --> Atacar:enemigo cerca
-    Perseguir --> SeleccionarObjetivo:enemigo perdido
-    Atacar --> SeleccionarObjetivo:enemigo muerto
+    VidaSuficiente? --> [*]:NO, vida baja, Supervivencia
+    VidaSuficiente? --> HayEnemigo?:SI, vida suficiente
+    HayEnemigo? --> [*]:no hay enemigo, Explorar
+    HayEnemigo? --> SeleccionarObjetivo:hay enemigo
+
+    SeleccionarObjetivo --> SeleccionarArma
+    SeleccionarArma --> Atacar:enemigo con menor vida
+    Atacar --> Decidir:enemigo muerto
+
     style Decidir fill:transparent
     style Perseguir fill:#BBDEFB
     style SeleccionarObjetivo fill:#FFCDD2
@@ -547,12 +537,9 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
 
 - **3.2. Submáquina de Supervivencia**
     Gestiona el comportamiento defensivo del agente cuando tiene vida baja:
-    - **Evadir:** el agente huye del peligro usando los recursos disponibles.
-    - **BuscarBotequín:** buscar de botiquines en el entorno.
-    - **UsarBotiquín:** una vez encontrado el botiquín el agente lo usa para recuperar vida. Tras usarlo, se evalúa la situación: 
-        - El agente sale del estado de supervivencia si se cumple: La vida es suficiente  y hay un enemigo cerca o ha alcanzado la vida máxima.
-        - Si no se cumple ninguna, sigue buscando.
-
+    - **Evadir:** el agente huye del peligro corriendo a doble de velocidad.
+    - **BuscarBotequín:** buscar de botiquines en el entorno. Una vez encontrado el botiquín el agente lo usa, y comprueba si tiene suficiente vida para salir del estado de supervivencia.
+    
     ```mermaid
     ---
     config:
@@ -562,42 +549,22 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     stateDiagram
     direction TB
     state BotiquinCerca? <<choice>>
-    state PuedoVolar? <<choice>>
     state EnemigoCerca? <<choice>>
-    state EnemigoCerca2? <<choice>>
-    state VidaMaxima? <<choice>>
     state VidaSuficiente? <<choice>>
 
     [*] --> EnemigoCerca?:Enemigo Cerca?
     EnemigoCerca? --> Evadir:SI
     EnemigoCerca? --> BuscarBotiquin:NO
 
-    Evadir --> PuedoVolar?:Puedo volar?
-    PuedoVolar? --> UsarPropulsor:SI
-    PuedoVolar? --> Correr:NO
-
-    UsarPropulsor --> EnemigoCerca?
-    Correr --> EnemigoCerca?
-
     BuscarBotiquin --> BotiquinCerca?:BotiquínCerca?
-    BotiquinCerca? --> UsarBotiquin:SI
+    BotiquinCerca? --> VidaSuficiente?:SI, VidaSuficiente?
     BotiquinCerca? --> BuscarBotiquin:NO
-
-    UsarBotiquin --> VidaMaxima? : VidaMaxima?
-
-    VidaMaxima? --> [*]: SI, vida maxima
-    VidaMaxima? --> EnemigoCerca2?: NO
-    
-    EnemigoCerca2? --> VidaSuficiente?
-    VidaSuficiente? --> Evadir : vida baja o no enemigo cerca
-    VidaSuficiente? --> UsarBotiquin: no hay enemigo
-    VidaSuficiente? --> [*] : vida suficiente y hay enemigo cerca
+    VidaSuficiente? --> [*]: SI
+    VidaSuficiente? --> BuscarBotiquin: NO
 
     style Evadir fill:#FFCDD2
     style BuscarBotiquin fill:#FFF9C4
-    style UsarPropulsor fill:#BBDEFB
     style Correr fill:#FFE0B2
-    style UsarBotiquin fill:#C8E6C9
     ```
 ---
 
@@ -605,10 +572,8 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     Encargada de gestionar de forma oportunista los recursos del entorno durante la exploración, permitiendo al agente recoger, evaluar y actualizar su equipamiento en función de la situación, con el objetivo de mejorar su capacidad ofensiva, su supervivencia y su movilidad:
 
     - **Evaluar:** detecta hay algun objeto que se pueda recoger en el entorno.
-    - **Gestión de armas:** selección y cambio al arma más adecuada según la situación. SI detecta un arma cercano: 
-        - Si dispone espacio en el inventario, la recoge directamente.
-        - Si el inventario está lleno, considera el arma y decide si lo cambia o no.
-    - **Gestión Utilidad:** si no hay armas, el agente comprueba la presencia de utilidades: Propulsor y Botiquin. Si está disponible, lo recoge y vuelve a evaluar el entorno.
+    - **BuscarArma:** buscar armas disponibles mienstras no haya enemigo cerca y que no dispongas todo tipo de armas.
+    - **Merodeas:** por defecto elige un punto al azar del entorno y va hacia él.
 
     ```Mermaid
     ---
@@ -620,31 +585,19 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     direction TB
     [*] --> Evaluar
 
-    state ArmaCerca <<choice>>
-    state MaximoArma <<choice>>
-    state JetpackCerca <<choice>>
-    state BotiquinCerca <<choice>>
+    state ArmaCompleta <<choice>>
+    state EnemigoCerca <<choice>>
 
-    Evaluar --> ArmaCerca: ArmaCerca?
+    Evaluar --> EnemigoCerca: Enemigo cerca?
+    EnemigoCerca -->[*]: SI, salir a Combatir
+    EnemigoCerca--> ArmaCompleta: NO, Todas las armas?
 
-    ArmaCerca --> MaximoArma: SI
-    ArmaCerca --> JetpackCerca: No, JetpackCerca?
+    ArmaCompleta --> Merodear: SI
+    ArmaCompleta --> BuscarArma: No
 
-    MaximoArma --> PillarArma: Hay hueco
-    MaximoArma --> CambiarArma: InventarioLleno
+    BuscarArma --> Evaluar
+    Merodear-->Evaluar
 
-    PillarArma --> Evaluar
-    CambiarArma --> Evaluar
-
-    JetpackCerca --> RecogerPropulsor: SI
-    JetpackCerca --> BotiquinCerca: No, BotiquinCerca?
-
-    RecogerPropulsor --> Evaluar
-
-    BotiquinCerca --> RecogerBotiquin: SI
-    BotiquinCerca --> [*]: No hay nada
-
-    RecogerBotiquin --> Evaluar
     ```
 ---
 

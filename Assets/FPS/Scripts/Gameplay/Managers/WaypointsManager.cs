@@ -27,7 +27,7 @@ namespace Unity.FPS.Gameplay
 
         [Header("Respawn Waypoints")]
         [Tooltip("Possible respawn points for prisoners after death")]
-        public List<Transform> respawnWaypoints = new List<Transform>();
+        public GameObject[] respawnWaypoints;
 
         [Header("Patrol Waypoints")]
         [Tooltip("Points used for patrol routes when no specific target is available")]
@@ -71,7 +71,6 @@ namespace Unity.FPS.Gameplay
             weaponWaypoints.Clear();
             medkitWaypoints.Clear();
             jetpackWaypoints.Clear();
-            respawnWaypoints.Clear();
             patrolWaypoints.Clear();
 
             // Collect all weapon spawn points
@@ -96,11 +95,7 @@ namespace Unity.FPS.Gameplay
             }
 
             //// Collect all respawn points
-            var r = GameObject.FindGameObjectsWithTag("RespawnPoint").ToList();
-            foreach (GameObject respawn in r)
-            {
-                respawnWaypoints.Add(respawn.transform);
-            }
+            respawnWaypoints = GameObject.FindGameObjectsWithTag("RespawnPoint");
 
             //// Collect all patrol points
             var p = GameObject.FindGameObjectsWithTag("PatrolPoint").ToList();

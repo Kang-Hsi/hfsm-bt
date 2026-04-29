@@ -1,21 +1,24 @@
 using System.Collections.Generic;
+using UnityEngine;
 
-public class Transition : ITransition
+public class HTransition : ITransition
 {
     private ICondition condition;
-    private IState targetState;
+    private State targetState;
     private List<IAction> actions;
+    private int level;
 
-    public Transition(ICondition condition, IState targetState, List<IAction> actions)
+    public HTransition(ICondition condition, State targetState, List<IAction> actions, int level)
     {
         this.condition = condition;
         this.targetState = targetState;
         this.actions = actions;
+        this.level = level;
     }
 
-    public bool IsTriggered()
+    public bool IsTriggered(GameObject agent)
     {
-        return condition.Test();
+        return condition.Test(agent);
     }
 
     public IState GetTargetState()
@@ -26,5 +29,10 @@ public class Transition : ITransition
     public List<IAction> GetActions()
     {
         return actions;
+    }
+
+    public int GetLevel()
+    {
+        return level;
     }
 }

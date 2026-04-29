@@ -1,26 +1,32 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
-public interface IState
+/// <summary>
+/// Clase abstracta de la maquina de estados jerarquica
+/// </summary>
+public abstract class HSMBase
 {
-    List<IAction> GetActions();
-    List<IAction> GetEntryActions();
-    List<IAction> GetExitActions();
-    List<ITransition> GetTransitions();
-}
+    public class UpdateResult
+    {
+        public List<IAction> actions = new List<IAction>();
+        public ITransition transition = null;
+        public int level = 0;
+    }
 
-public interface ITransition
-{
-    bool IsTriggered();
-    IState GetTargetState();
-    List<IAction> GetActions();
-}
+    public virtual List<IAction> GetActions()
+    {
+        return new List<IAction>();
+    }
 
-public interface ICondition
-{
-    bool Test();
-}
+    public virtual UpdateResult Update(GameObject agent)
+    {
+        return new UpdateResult
+        {
+            actions = GetActions(),
+            transition = null,
+            level = 0
+        };
+    }
 
-public interface IAction
-{
-    void Execute();
+    public abstract List<State> GetStates();
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 public class SubMachineState : State
 {
@@ -9,12 +10,10 @@ public class SubMachineState : State
         this.machine = machine;
     }
 
-    public override UpdateResult Update()
+    public override UpdateResult Update(GameObject agent)
     {
-        var result = machine.Update();
-
+        var result = machine.Update(agent);
         result.actions.AddRange(base.GetActions());
-
         return result;
     }
 
@@ -26,15 +25,13 @@ public class SubMachineState : State
             states.AddRange(machine.GetStates());
             return states;
         }
-
         return new List<State> { this };
     }
 
-    public List<IAction> UpdateDown(State state, int level)
+    public List<IAction> UpdateDown(State state, int level, GameObject agent)
     {
         if (machine == null)
             return new List<IAction>();
-
-        return machine.UpdateDown(state, level);
+        return machine.UpdateDown(state, level, agent);
     }
 }

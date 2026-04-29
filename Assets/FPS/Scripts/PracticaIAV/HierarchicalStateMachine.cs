@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 public class HierarchicalStateMachine : HSMBase
 {
@@ -21,7 +22,7 @@ public class HierarchicalStateMachine : HSMBase
         return new List<State>();
     }
 
-    public override UpdateResult Update()
+    public override UpdateResult Update(GameObject agent)
     {
         if (_currentState == null)
         {
@@ -37,7 +38,7 @@ public class HierarchicalStateMachine : HSMBase
 
         foreach (HTransition t in _currentState.GetTransitions())
         {
-            if (t.IsTriggered())
+            if (t.IsTriggered(agent))
             {
                 triggered = t;
                 break;
@@ -56,7 +57,7 @@ public class HierarchicalStateMachine : HSMBase
         }
         else
         {
-            result = _currentState.Update();
+            result = _currentState.Update(agent);
         }
 
         if (result.transition != null)
@@ -89,7 +90,7 @@ public class HierarchicalStateMachine : HSMBase
                 if (targetState is SubMachineState subMachine)
                 {
                     // transición submáquina
-                    result.actions.AddRange(subMachine.UpdateDown(targetState, -result.level));
+                    result.actions.AddRange(subMachine.UpdateDown(targetState, -result.level, agent));
                 }
                 else
                 {
@@ -111,23 +112,20 @@ public class HierarchicalStateMachine : HSMBase
         return result;
     }
 
-    public List<IAction> UpdateDown(State state, int level)
+    public List<IAction> UpdateDown(State state, int level, GameObject agent)
     {
         List<IAction> actions = new List<IAction>();
 
-        // subir en la jerarquía
         if (level > 0 && Parent != null)
         {
-            actions.AddRange(Parent.UpdateDown(_currentState, level - 1));
+            actions.AddRange(Parent.UpdateDown(_currentState, level - 1, agent));
         }
 
-        // salir del estado actual
         if (_currentState != null)
         {
             actions.AddRange(_currentState.GetExitActions());
         }
 
-        // entrar al nuevo estado
         _currentState = state;
         actions.AddRange(state.GetEntryActions());
 

@@ -1,0 +1,30 @@
+using Unity.FPS.Game;
+using UnityEditor.Experimental.GraphView;
+using UnityEngine;
+
+[CreateAssetMenu(menuName = "HFSM/Conditions/LifeLowerThan", fileName = "Condition_LifeLowerThan")]
+public class LifeLowerThanConditionSO : ConditionSO
+{
+    [SerializeField]
+    private int lifeThreshold;
+
+    public override ICondition Create()
+    {
+        return new LifeLowerThanCondition(lifeThreshold);
+    }
+
+    private class LifeLowerThanCondition : ICondition
+    {
+        private int lifeThreshold;
+
+        public LifeLowerThanCondition(int lifeThreshold)
+        {
+            this.lifeThreshold = lifeThreshold;
+        }
+
+        public bool Test(GameObject agent)
+        {
+            return false;
+        }
+    }
+}

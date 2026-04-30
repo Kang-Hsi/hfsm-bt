@@ -5,7 +5,10 @@ public class HFSMLoader : MonoBehaviour
 {
     Dictionary<StateSO, State> states = new Dictionary<StateSO, State>();
 
-    public static HFSMLoader Instance { get; private set; }
+    public static HFSMLoader Instance { 
+        get; 
+        private set; 
+    }
 
     void Awake()
     {
@@ -31,17 +34,6 @@ public class HFSMLoader : MonoBehaviour
             states[s] = null;
             State state = new State(s);
             states[s] = state;
-
-            Debug.Log(state.GetActions().Count);
-            Debug.Log(state.GetTransitions().Count);
         }
     }
-
-    //private void Start()
-    //{
-    //    //foreach (var s in stateSOs)
-    //    //{
-    //    //    add(s);
-    //    //}
-    //}
 }

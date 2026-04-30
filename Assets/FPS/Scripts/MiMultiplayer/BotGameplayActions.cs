@@ -179,10 +179,15 @@ public class BotGameplayActions : MonoBehaviour
     public bool TryMoveToWorldPosition(Vector3 worldPosition)
     {
         if (m_NavMeshAgent == null || !m_NavMeshAgent.isActiveAndEnabled)
+        {
             return false;
+        }
         if (!m_NavMeshAgent.isOnNavMesh)
+        {
             return false;
+        }
 
+        Debug.Log("estoy en el 3");
         m_NavMeshAgent.isStopped = false;
         return m_NavMeshAgent.SetDestination(worldPosition);
     }

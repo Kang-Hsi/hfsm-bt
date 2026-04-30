@@ -19,12 +19,23 @@ public class BotController : MonoBehaviour
     private StateSO so;
     IEnumerator Start()
     {
+        // Esperar a que HFSMLoader este listo
+        while (HFSMLoader.Instance == null)
+        {
+            yield return null;
+        }
+
+        // Esperar a que WaypointsManager este listo
+        while (WaypointsManager.Instance == null)
+        {
+            yield return null;
+        }
+
+        Debug.Log("Singletons inicializados correctamente");
+
         State initState = HFSMLoader.Instance.GetState(so);
         stateMachine = new HierarchicalStateMachine(initState);
         agent = GetComponent<NavMeshAgent>();
-
-        while (WaypointsManager.Instance == null)
-            yield return null;
 
         waypoints = WaypointsManager.Instance.weaponWaypoints;
 
@@ -33,15 +44,17 @@ public class BotController : MonoBehaviour
             Debug.LogWarning("No hay waypoints de armas");
             yield break;
         }
-
-        PickRandomWaypoint();
-
     }
 
     void Update()
     {
+        if (stateMachine == null)
+            return;
+        Debug.Log(1);
+
         foreach (var action in stateMachine.Update(gameObject).actions)
         {
+            Debug.Log(2);
             action.Execute(gameObject);
         }
     }

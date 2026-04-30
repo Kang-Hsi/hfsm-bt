@@ -322,7 +322,7 @@ public class FSM : NetworkBehaviour
         return false;
     }
 
-    static bool TryPickAWeapon(Vector3 origin, out Vector3 result)
+    public static bool TryPickAWeapon(Vector3 origin, out Vector3 result)
     {
         var points = WaypointsManager.Instance.weaponWaypoints;
         
@@ -333,8 +333,8 @@ public class FSM : NetworkBehaviour
         }
         else
         {
-            result = points[0].position;
-            Debug.Log($"transform punto a seguir: {result}");
+            int i = Random.Range(0, points.Count);
+            result = points[i].position;
             return true;
         }
     }

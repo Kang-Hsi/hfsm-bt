@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0506ffb2e3b599c4db876bf6743ccd42, type: 3}
   m_Name: SO_IdleState
   m_EditorClassIdentifier: Assembly-CSharp::StateSO
-  transitions: []
+  transitions:
+  - {fileID: 11400000, guid: 768a539e0c972ff4f870134cedfd392b, type: 2}
   entryActions: []
   exitActions: []
-  actions:
-  - {fileID: 11400000, guid: e663e7f60f2d46c4da0235cbe7010076, type: 2}
+  actions: []

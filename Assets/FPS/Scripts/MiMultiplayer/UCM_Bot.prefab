@@ -1678,9 +1678,9 @@ GameObject:
   - component: {fileID: 3508329648553967799}
   - component: {fileID: 4512190218612294183}
   - component: {fileID: 1722169817429297685}
-  - component: {fileID: 2931731295390458686}
   - component: {fileID: 4828794809904590943}
   - component: {fileID: 7204040198340412882}
+  - component: {fileID: -1086812169682421674}
   m_Layer: 0
   m_Name: UCM_Bot
   m_TagString: Player
@@ -2335,22 +2335,6 @@ MonoBehaviour:
       MinSecondsBetweenUpdates: 0
       MaxSecondsBetweenUpdates: 0
     m_InternalValue: 0
---- !u!114 &2931731295390458686
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1744405021316778650}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d055cdeb9e950b944a7a32728ef20c34, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::FSM
-  ShowTopMostFoldoutHeaderGroup: 1
-  m_WanderRadius: 25
-  m_RepathIntervalSeconds: 1.25
-  m_LogStateTransitions: 1
 --- !u!114 &4828794809904590943
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2389,6 +2373,20 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 1
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &-1086812169682421674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1744405021316778650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0ad2533141a523458ce6afcd1b318e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BotController
+  reachDistance: 2
+  so: {fileID: 11400000, guid: 64dfb47ea139eb742abfcc5416ea605e, type: 2}
 --- !u!1 &1788606075170186430
 GameObject:
   m_ObjectHideFlags: 0

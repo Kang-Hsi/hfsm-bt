@@ -305,7 +305,7 @@ public class FSM : NetworkBehaviour
     // Utilidades NavMesh (podrían moverse a BotGameplayActions si preferís no tener nada de lógica aquí)
     // ---------------------------------------------------------------------------------------------
 
-    static bool TryPickRandomNavMeshPoint(Vector3 origin, float radius, out Vector3 result)
+    public static bool TryPickRandomNavMeshPoint(Vector3 origin, float radius, out Vector3 result)
     {
         for (int i = 0; i < 20; i++)
         {

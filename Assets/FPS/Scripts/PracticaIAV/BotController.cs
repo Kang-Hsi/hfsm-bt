@@ -13,8 +13,14 @@ public class BotController : MonoBehaviour
 
     public float reachDistance = 2f;
 
+    HierarchicalStateMachine stateMachine;
+
+    [SerializeField]
+    private StateSO so;
     IEnumerator Start()
     {
+        State initState = HFSMLoader.Instance.GetState(so);
+        stateMachine = new HierarchicalStateMachine(initState);
         agent = GetComponent<NavMeshAgent>();
 
         while (WaypointsManager.Instance == null)
@@ -29,17 +35,14 @@ public class BotController : MonoBehaviour
         }
 
         PickRandomWaypoint();
+
     }
 
     void Update()
     {
-        if (waypoints == null || waypoints.Count == 0) return;
-
-        float dist = Vector3.Distance(transform.position, waypoints[currentIndex].position);
-
-        if (dist < reachDistance)
+        foreach (var action in stateMachine.Update(gameObject).actions)
         {
-            PickRandomWaypoint();
+            action.Execute(gameObject);
         }
     }
 

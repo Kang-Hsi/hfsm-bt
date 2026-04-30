@@ -5,7 +5,7 @@ public class SubMachineState : State
 {
     private HierarchicalStateMachine machine;
 
-    public SubMachineState(HierarchicalStateMachine machine)
+    public SubMachineState(HierarchicalStateMachine machine, StateSO aState): base(aState)
     {
         this.machine = machine;
     }

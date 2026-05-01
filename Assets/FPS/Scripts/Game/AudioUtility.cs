@@ -42,7 +42,15 @@ namespace Unity.FPS.Game
         public static AudioMixerGroup GetAudioGroup(AudioGroups group)
         {
             if (s_AudioManager == null)
+            {
                 s_AudioManager = Object.FindFirstObjectByType<AudioManager>();
+                
+                if (s_AudioManager == null)
+                {
+                    return null;
+                }
+            }    
+          
 
             var groups = s_AudioManager.FindMatchingGroups(group.ToString());
 

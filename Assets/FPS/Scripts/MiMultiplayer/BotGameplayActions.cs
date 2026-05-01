@@ -186,8 +186,6 @@ public class BotGameplayActions : MonoBehaviour
         {
             return false;
         }
-
-        Debug.Log("estoy en el 3");
         m_NavMeshAgent.isStopped = false;
         return m_NavMeshAgent.SetDestination(worldPosition);
     }

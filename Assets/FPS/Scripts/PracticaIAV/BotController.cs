@@ -11,8 +11,6 @@ public class BotController : MonoBehaviour
     NavMeshAgent agent;
     int currentIndex;
 
-    public float reachDistance = 2f;
-
     HierarchicalStateMachine stateMachine;
 
     [SerializeField]
@@ -31,8 +29,6 @@ public class BotController : MonoBehaviour
             yield return null;
         }
 
-        Debug.Log("Singletons inicializados correctamente");
-
         State initState = HFSMLoader.Instance.GetState(so);
         stateMachine = new HierarchicalStateMachine(initState);
         agent = GetComponent<NavMeshAgent>();
@@ -50,11 +46,9 @@ public class BotController : MonoBehaviour
     {
         if (stateMachine == null)
             return;
-        Debug.Log(1);
 
         foreach (var action in stateMachine.Update(gameObject).actions)
         {
-            Debug.Log(2);
             action.Execute(gameObject);
         }
     }

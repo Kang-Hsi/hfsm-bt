@@ -46,7 +46,7 @@ namespace Unity.FPS.Gameplay
         float m_LastAmmoRatio;
         ParticleSystem.EmissionModule m_SteamVfxEmissionModule;
 
-        void Awake()
+        void Start()
         {
             if (!SteamVfx)
             {

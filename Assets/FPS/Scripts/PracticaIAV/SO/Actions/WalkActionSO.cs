@@ -23,6 +23,7 @@ public class WalkActionSO : ActionSO
 
         public void Execute(GameObject agent)
         {
+            Debug.Log("Anda");
             var navAgent = agent.GetComponent<NavMeshAgent>();
             var botActions = agent.GetComponent<BotGameplayActions>();
 

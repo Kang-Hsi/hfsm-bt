@@ -306,6 +306,7 @@ public class BotGameplayActions : MonoBehaviour
     public bool TryFireCurrentWeaponPrimary(bool pressedDown, bool held, bool released)
     {
         var w = GetActiveWeaponOrNull();
+        Debug.Log("Weapon : " + w);
         if (w == null)
             return false;
         return w.HandleShootInputs(pressedDown, held, released);

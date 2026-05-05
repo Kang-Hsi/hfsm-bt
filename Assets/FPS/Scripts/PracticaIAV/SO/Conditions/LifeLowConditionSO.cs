@@ -6,7 +6,7 @@ using UnityEngine;
 public class LifeLowerThanConditionSO : ConditionSO
 {
     [SerializeField]
-    private int lifeThreshold;
+    private float lifeThreshold;
 
     public override ICondition Create()
     {
@@ -15,9 +15,9 @@ public class LifeLowerThanConditionSO : ConditionSO
 
     private class LifeLowerThanCondition : ICondition
     {
-        private int lifeThreshold;
+        private float lifeThreshold;
 
-        public LifeLowerThanCondition(int lifeThreshold)
+        public LifeLowerThanCondition(float lifeThreshold)
         {
             this.lifeThreshold = lifeThreshold;
         }

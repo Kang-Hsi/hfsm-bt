@@ -43,6 +43,7 @@ public class BotGameplayActions : MonoBehaviour
     PlayerWeaponsManager m_Weapons;
     Health m_Health;
     PlayerCharacterController m_PlayerCc;
+    Transform m_target;
 
     Vector3 m_LastWorldPosForAnim;
     bool m_HasLastWorldPosForAnim;
@@ -52,6 +53,8 @@ public class BotGameplayActions : MonoBehaviour
 
     /// <summary>Vida del personaje; útil para transiciones.</summary>
     public Health Health => m_Health;
+
+    public Transform Target => m_target;
 
     void Awake()
     {
@@ -251,6 +254,23 @@ public class BotGameplayActions : MonoBehaviour
         transform.rotation = Quaternion.LookRotation(flat.normalized, Vector3.up);
     }
 
+    public void FaceTowardsWorldPointSmooth(Vector3 worldPoint)
+    {
+        Vector3 flat = worldPoint - transform.position;
+        flat.y = 0f;
+
+        if (flat.sqrMagnitude < 0.0001f)
+            return;
+
+        Quaternion targetRot = Quaternion.LookRotation(flat.normalized, Vector3.up);
+
+        transform.rotation = Quaternion.Slerp(
+            transform.rotation,
+            targetRot,
+            Time.deltaTime * 8f
+        );
+    }
+
     /// <summary>
     /// Gira el cuerpo hacia una dirección horizontal (XZ).
     /// </summary>
@@ -306,7 +326,6 @@ public class BotGameplayActions : MonoBehaviour
     public bool TryFireCurrentWeaponPrimary(bool pressedDown, bool held, bool released)
     {
         var w = GetActiveWeaponOrNull();
-        Debug.Log("Weapon : " + w);
         if (w == null)
             return false;
         return w.HandleShootInputs(pressedDown, held, released);
@@ -368,5 +387,47 @@ public class BotGameplayActions : MonoBehaviour
     public bool IsAlive()
     {
         return m_Health == null || m_Health.CurrentHealth > 0f;
+    }
+
+    public bool EnemyNear(float radius)
+    {
+        Collider[] hits = Physics.OverlapSphere(transform.position, radius);
+
+        foreach (var col in hits)
+        {
+            if (col.transform.root == transform)
+                continue;
+
+            if (!col.transform.root.CompareTag("Enemy"))
+                continue;
+
+            Transform enemy = col.transform.root;
+
+            //simular la altura donde esta el arma
+            Vector3 origin = transform.position + Vector3.up * 1.5f;
+            Vector3 target = enemy.position + Vector3.up * 1.5f;
+
+            Vector3 dir = (target - origin);
+            float dist = dir.magnitude;
+
+            dir.Normalize();
+
+            // probar si hay muro entre medio
+            if (Physics.Raycast(origin, dir, out RaycastHit hit, dist))
+            {
+                if (hit.transform.root != enemy)
+                    continue;
+            }
+            m_target = enemy;
+            return true;
+        }
+
+        return false;
+    }
+
+    public void ResetAI()
+    {
+        StopNavigation();
+        m_target = null;
     }
 }

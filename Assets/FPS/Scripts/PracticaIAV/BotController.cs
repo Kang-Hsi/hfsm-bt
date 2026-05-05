@@ -41,7 +41,10 @@ public class BotController : MonoBehaviour
             yield break;
         }
     }
-
+    public void resetStateMachine()
+    {
+        stateMachine.Reset();
+    }
     void Update()
     {
         if (stateMachine == null)
@@ -53,24 +56,24 @@ public class BotController : MonoBehaviour
         }
     }
 
-    void PickRandomWaypoint()
-    {
-        if (waypoints.Count == 1)
-        {
-            currentIndex = 0;
-        }
-        else
-        {
-            int newIndex;
+    //void PickRandomWaypoint()
+    //{
+    //    if (waypoints.Count == 1)
+    //    {
+    //        currentIndex = 0;
+    //    }
+    //    else
+    //    {
+    //        int newIndex;
 
-            do
-            {
-                newIndex = Random.Range(0, waypoints.Count);
-            } while (newIndex == currentIndex);
+    //        do
+    //        {
+    //            newIndex = Random.Range(0, waypoints.Count);
+    //        } while (newIndex == currentIndex);
 
-            currentIndex = newIndex;
-        }
+    //        currentIndex = newIndex;
+    //    }
 
-        agent.SetDestination(waypoints[currentIndex].position);
-    }
+    //    agent.SetDestination(waypoints[currentIndex].position);
+    //}
 }

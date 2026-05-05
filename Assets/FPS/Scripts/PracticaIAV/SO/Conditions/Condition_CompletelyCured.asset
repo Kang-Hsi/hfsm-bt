@@ -10,5 +10,5 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7d60832088928004dac668eb16654c49, type: 3}
-  m_Name: Condition_True
-  m_EditorClassIdentifier: Assembly-CSharp::TrueConditionSO
+  m_Name: Condition_CompletelyCured
+  m_EditorClassIdentifier: Assembly-CSharp::CompletelyCuredConditionSO

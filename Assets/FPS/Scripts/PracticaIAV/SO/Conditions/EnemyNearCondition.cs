@@ -1,6 +1,6 @@
 using Unity.FPS.Game;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.AI;
 
 [CreateAssetMenu(menuName = "HFSM/Conditions/EnemyNear", fileName = "Condition_EnemyNear")]
 public class EnemyNearConditionSO : ConditionSO
@@ -21,14 +21,12 @@ public class EnemyNearConditionSO : ConditionSO
         }
         public bool Test(GameObject agent)
         {
-            RaycastHit hit;
-            if (Physics.SphereCast(agent.transform.position, radius, agent.transform.forward, out hit, 30, 1))
-            {
-                Debug.Log("Enemigo cerca");
-                return true;
-            }
-            Debug.Log($"Hit: {hit.distance}");
-            return false;
+            var bot = agent.GetComponent<BotGameplayActions>();
+            if (bot == null)
+                return false;
+            bool res = bot.EnemyNear(radius);
+            Debug.Log($"hay enemigo cerca?: {res}");
+            return res;
         }
     }
 }

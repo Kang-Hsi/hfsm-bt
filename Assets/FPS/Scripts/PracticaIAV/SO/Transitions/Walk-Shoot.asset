@@ -15,4 +15,5 @@ MonoBehaviour:
   condition: {fileID: 11400000, guid: bbdd08f99778eba49b3d2f3ed566fbc9, type: 2}
   targetState: {fileID: 11400000, guid: ce42a2fb4770f3f4cb3d05c3d8ad2bc8, type: 2}
   level: 0
-  actions: []
+  actions:
+  - {fileID: 11400000, guid: 1ee45c360c43faa48b6c51554de7cdbd, type: 2}

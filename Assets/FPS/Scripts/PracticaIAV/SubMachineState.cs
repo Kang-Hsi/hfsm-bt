@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-
 public class SubMachineState : State
 {
     private HierarchicalStateMachine machine;
@@ -12,20 +11,12 @@ public class SubMachineState : State
 
     public override UpdateResult Update(GameObject agent)
     {
-        var result = machine.Update(agent);
-        result.actions.AddRange(base.GetActions());
-        return result;
+        return machine.Update(agent);
     }
 
     public override List<State> GetStates()
     {
-        if (machine != null)
-        {
-            var states = new List<State> { this };
-            states.AddRange(machine.GetStates());
-            return states;
-        }
-        return new List<State> { this };
+        return machine.GetStates();
     }
 
     public List<IAction> UpdateDown(State state, int level, GameObject agent)

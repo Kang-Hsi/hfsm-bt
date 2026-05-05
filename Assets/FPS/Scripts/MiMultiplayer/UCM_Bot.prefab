@@ -2362,7 +2362,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f0ad2533141a523458ce6afcd1b318e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BotController
-  so: {fileID: 11400000, guid: 7cfaeae9a43432740a07d50c2ea879b5, type: 2}
+  so: {fileID: 11400000, guid: 64dfb47ea139eb742abfcc5416ea605e, type: 2}
 --- !u!195 &7271891809844145442
 NavMeshAgent:
   m_ObjectHideFlags: 0

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2300b302336753f4b96a9e437f5255b6, type: 3}
   m_Name: Idle-Walk
   m_EditorClassIdentifier: Assembly-CSharp::TransitionSO
-  condition: {fileID: 11400000, guid: d15680ae0ede6db42b9c740b4dd24465, type: 2}
+  condition: {fileID: 11400000, guid: 6726531ffc36dda4ea4912ac948196f1, type: 2}
   targetState: {fileID: 11400000, guid: 7cfaeae9a43432740a07d50c2ea879b5, type: 2}
   level: 0
   actions: []

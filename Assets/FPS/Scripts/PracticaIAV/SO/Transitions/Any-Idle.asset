@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2300b302336753f4b96a9e437f5255b6, type: 3}
-  m_Name: Shoot-
+  m_Name: Any-Idle
   m_EditorClassIdentifier: Assembly-CSharp::TransitionSO
-  condition: {fileID: 0}
-  targetState: {fileID: 0}
+  condition: {fileID: 11400000, guid: e515dad9eb96f7544be2b833d979dec0, type: 2}
+  targetState: {fileID: 11400000, guid: 64dfb47ea139eb742abfcc5416ea605e, type: 2}
   level: 0
   actions: []

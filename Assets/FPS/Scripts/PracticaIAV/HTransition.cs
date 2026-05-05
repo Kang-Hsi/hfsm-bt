@@ -4,14 +4,14 @@ using UnityEngine;
 public class HTransition : ITransition
 {
     private ICondition condition;
-    private State targetState;
+    private StateSO targetStateSO;
     private List<IAction> actions;
     private int level;
 
-    public HTransition(ICondition condition, State targetState, List<IAction> actions, int level)
+    public HTransition(ICondition condition, StateSO targetStateSO, List<IAction> actions, int level)
     {
         this.condition = condition;
-        this.targetState = targetState;
+        this.targetStateSO = targetStateSO;
         this.actions = actions;
         this.level = level;
     }
@@ -23,7 +23,7 @@ public class HTransition : ITransition
 
     public IState GetTargetState()
     {
-        return targetState;
+        return HFSMLoader.Instance.GetState(targetStateSO);
     }
 
     public List<IAction> GetActions()

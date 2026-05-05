@@ -4,8 +4,10 @@ using UnityEngine.AI;
 [CreateAssetMenu(menuName = "HFSM/Actions/Walk", fileName = "Walk_Action")]
 public class WalkActionSO : ActionSO
 {
-    public float speed = 5f;
-    public float searchRadius = 5f;
+    [SerializeField]
+    private float speed = 5f;
+    [SerializeField]
+    private float searchRadius = 5f;
 
     public override IAction Create()
     {
@@ -23,20 +25,18 @@ public class WalkActionSO : ActionSO
 
         public void Execute(GameObject agent)
         {
+            var bot = agent.GetComponent<BotGameplayActions>();
+            if (bot == null) return;
+
             Debug.Log("Anda");
-            var navAgent = agent.GetComponent<NavMeshAgent>();
-            var botActions = agent.GetComponent<BotGameplayActions>();
 
-            if (navAgent == null || botActions == null) return;
-
-            // Si no tiene destino o llega al destino actual
-            if (!navAgent.hasPath || navAgent.remainingDistance < 0.5f)
+            // Si ha llegado o no tiene path
+            if (bot.HasReachedCurrentDestination())
             {
-                // Buscar nuevo punto
                 if (FSM.TryPickAWeapon(agent.transform.position, out var dest))
                 {
-                    navAgent.speed = speed;
-                    botActions.TryMoveToWorldPosition(dest);
+                    bot.NavMeshAgent.speed = speed; // OK tocarlo aquí
+                    bot.TryMoveToWorldPosition(dest);
                 }
             }
         }

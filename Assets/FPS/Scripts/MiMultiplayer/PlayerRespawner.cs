@@ -20,10 +20,12 @@ namespace Unity.FPS.Gameplay
         private PlayerCharacterController m_CharacterController;
         PlayerNameTag m_LastPlayerAttacker;
 
+        private BotController m_BotController;
         void Awake()
         {
             m_Health = GetComponent<Health>();
             m_CharacterController = GetComponent<PlayerCharacterController>();
+            m_BotController = GetComponent<BotController>();
 
             if (m_Health != null)
             {
@@ -117,9 +119,8 @@ namespace Unity.FPS.Gameplay
                     m_LastPlayerAttacker.Kills.Value++;
             }
 
-            bool isBot = GetComponent<FSM>() != null;
-
-            if (isBot)
+            FSM fsm = GetComponent<FSM>();
+            if (m_BotController != null || fsm != null)
             {
                 if (IsServer)
                     StartCoroutine(BotDeathRoutineServer());
@@ -197,6 +198,8 @@ namespace Unity.FPS.Gameplay
 
             if (m_Health != null) m_Health.Revive();
             if (m_CharacterController != null) m_CharacterController.OnRespawn();
+
+            if (m_BotController) m_BotController.resetStateMachine();
         }
 
         /// <summary>

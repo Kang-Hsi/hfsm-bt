@@ -44,7 +44,6 @@ public class State : HSMBase, IState
         foreach (TransitionSO t in myState.transitions)
         {
             ICondition aCondition = t.condition.Create();
-            State targetState = HFSMLoader.Instance.GetState(t.targetState);
 
             List<IAction> transitionActions = new();
             foreach (ActionSO a in t.actions)
@@ -52,7 +51,7 @@ public class State : HSMBase, IState
                 transitionActions.Add(a.Create());
             }
 
-            HTransition aTransition = new HTransition(aCondition, targetState, transitionActions, t.level);
+            HTransition aTransition = new HTransition(aCondition, t.targetState, transitionActions, t.level);
             transitions.Add(aTransition);
         }
     }

@@ -13,7 +13,10 @@ public class HierarchicalStateMachine : HSMBase
         _initialState = initialState;
         _currentState = initialState;
     }
-
+    public void Reset()
+    {
+        _currentState = _initialState;
+    }
     public override List<State> GetStates()
     {
         if (_currentState != null)

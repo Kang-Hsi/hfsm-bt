@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -12,4 +11,10 @@ public class StateSO : ScriptableObject
     public List<ActionSO> entryActions = new();
     public List<ActionSO> exitActions = new();
     public List<ActionSO> actions = new();
+}
+
+[CreateAssetMenu(menuName = "HFSM/State/SubState", fileName = "SubState")]
+public class SubStateSO : StateSO
+{
+    public StateSO initialState;
 }

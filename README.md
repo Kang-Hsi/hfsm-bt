@@ -433,18 +433,35 @@ class SubMachineState: extends State, HierarchicalStateMachine:
             return [this]
 ``` 
 ## Implementación de cada apartado
-
 ### Apartado A
-TODO
+- La malla de navegación del escenario se encuentra previamente integrada en la base del proyecto, permitiendo la delimitación y navegación entre las distintas estancias del entorno virtual.
+
+- Se ha implementado un manager mediante un patrón Singleton (`WaypointsManager`), encargado de almacenar y administrar los diferentes waypoints del escenario. Entre estos se incluyen los puntos de aparición de armas, botiquines, enemigos y sus respectivos puntos de respawn.
+
+- El proyecto dispone de una cámara en primera persona proporcionada en la base inicial. Adicionalmente, se ha desarrollado una segunda cámara ortogonal con vista cenital, vinculada al seguimiento del bot, utilizada como sistema de minimapa para ofrecer una visión general del entorno.
+
 
 ### Apartado B
-TODO
+- El sistema de respawn se encuentra implementado en la base del proyecto. La escena dispone de distintos puntos de reaparición distribuidos, de manera que, cuando el bot es eliminado, selecciona uno de ellos como nueva posición de aparición. Sólo que en vez de obtener esos puntos por una búsqueda por tag, sea que `WaypointsManager` te devuelva la lista de waypoints.
+
+- En el script `BotGameplayActions.cs` se implementan las principales acciones de comportamiento del bot, incluyendo el desplazamiento hacia objetivos mediante el sistema `NavMeshAgent` de Unity, el disparo, el cambio de arma y otras mecánicas relacionadas con la jugabilidad y la interacción dentro del entorno.
 
 ### Apartado C
-TODO
+- Se ha creado un componente nuevo (`BotController`) para prototipar y verificar la navegación por `NavmeshAgent`, que usa métodos estáticos para buscar waypoint (uno aleatorio, un arma, una cura) y intentar llegar a ese punto usando métodos proporcionados por `BotGameplayActions`.
 
 ### Apartado D
-El comportamiento del agente inteligente se ha implementado mediante una **máquina de estados finita jerárquica (HFSM)**, cuyo objetivo es gestionar de forma estructurada y eficiente la toma de decisiones dentro del entorno dinámico.
+- El comportamiento del agente inteligente se ha implementado mediante una **Máquina de Estados Finitos Jerárquica (HFSM)**, cuyo objetivo es gestionar de forma estructurada, modular y eficiente la toma de decisiones dentro de un entorno dinámico.
+
+- Para ello, se han desarrollado todos los scripts necesarios asociados a este patrón de arquitectura, localizados en la carpeta **PracticaIAV** del proyecto.
+
+- La configuración de los distintos elementos de la HFSM —estados, transiciones, condiciones y acciones— se almacena mediante objetos `ScriptableObject`, permitiendo una definición desacoplada y fácilmente reutilizable. Posteriormente, el componente `HFSMLoader` se encarga de instanciar y construir los objetos funcionales correspondientes a partir de dichos archivos de configuración.
+
+- La creación de una máquina de estados jerárquica se realiza asignándole un estado inicial desde el cual comienza la ejecución del comportamiento.
+
+- Asimismo, el sistema permite la definición de submáquinas de estados mediante `ScriptableObject`. Estas submáquinas contienen los mismos elementos que un estado convencional —acciones, eventos de entrada y salida, y transiciones— incorporando además un campo adicional destinado a especificar el estado inicial interno de la submáquina.
+
+- Finalmente, el componente `BotController` ha sido adaptado para integrarse correctamente con la arquitectura HFSM, permitiendo la ejecución y gestión adecuada de los distintos estados y comportamientos del agente.
+
 
 #### D.1. Enfoque general
 
@@ -613,13 +630,24 @@ El uso de una máquina de estados jerárquica aporta múltiples beneficios:
 ---
 
 ### Apartado E
-TODO
+- El agente inteligente ha sido diseñado para maximizar la métrica principal del juego, definida como la diferencia entre el número de enemigos eliminados y el número de veces que el propio agente ha sido eliminado (*kills - deaths*). Esta métrica se utiliza como indicador principal del rendimiento y eficacia del comportamiento implementado. Para conseguir eso, se ha priorizado las transiciones al estado de combate o recuperación (dependiendo del contexto) antes que el estado de exploración.
+
+* Se han agregado más elementos de UI para que, en el HUD, se muestren las métricas complementarias, entre las que se incluyen el número de armas obtenidas, utensilios recogidos y vigilantes robóticos eliminados.
+
+* Asimismo, se proporciona un timer y otro indicador de FPS para presentar datos de contexto relevantes, como la duración total de la partida en segundos y la tasa de fotogramas por segundo (FPS) respectivamente, permitiendo evaluar tanto el rendimiento del agente como el desempeño general de la simulación en tiempo real.
 
 ## Evolución
 |**Estado**|**Tarea**|**Fecha**|
 |--|--|--|
 |✔|Preparación: Primer contacto y creación del repositorio|9-4-2026|
 |✔|Documentación: Actualizar readme|23-4-2026|
+|✔|Documentación: Actualizar readme|24-4-2026|
+|✔|Desarrollo: Sistema de waypoints implementado|27-4-2026|
+|✔|Desarrollo: Minimapa implementado|27-4-2026|
+|✔|Desarrollo:<br>- Respawn del player<br> - Scripts básicos para HFSM (interfaces, hierarchy state machine y substate machine)<br> Documentación: Actualizar readme|28-4-2026|
+|✔|Desarrollo: Máquina de estados básica funcional con scriptable objects|29-4-2026|
+|✔|Desarrollo: Máquina con estado de caminar, encarar, disparar funcional con transiciones lógicamente diseñadas (sin ser herárquico)|5-5-2026|
+|✔|Documentación: Actualizar readme|7-5-2026|
 ## Pruebas y métricas
 
 A continuación se detalla un plan de pruebas para verificar que se cumplen todos los requisitos del enunciado. Se organiza por apartados (A–E) según las características.
@@ -631,10 +659,11 @@ A continuación se detalla un plan de pruebas para verificar que se cumplen todo
     4. Verificar que el minimapa se actualiza en tiempo real conforme el agente se desplaza.
     ---
 - **Apartado B**
-    1. Confirmar que el agente controlado por el jugador aparece en uno de los puntos predefinidos del escenario.
-    2. Comprobar que el personaje se puede mover correctamente (WASD).
-    3. Comprobar que el personaje puede disparar y cambiar de arma.
-    4. Comprobar que el personaje puede correr, volar, agacharsee y saltar.
+    1. Elegir HUMAN_PREFAB
+    2. Confirmar que el agente controlado por el jugador aparece en uno de los puntos predefinidos del escenario.
+    3. Comprobar que el personaje se puede mover correctamente (WASD).
+    4. Comprobar que el personaje puede disparar y cambiar de arma.
+    5. Comprobar que el personaje puede correr, volar, agacharsee y saltar.
     ---
 - **Apartado C**
     1. Confirmar que el agente recorre la prisión de manera autónoma.

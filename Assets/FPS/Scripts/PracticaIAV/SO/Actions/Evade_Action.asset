@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9a5f34d2e6b7a16c8d3f4a5b6c7d8e9f, type: 3}
   m_Name: Evade_Action
   m_EditorClassIdentifier: Assembly-CSharp::EvadeActionSO
-  speed: 10
+  speed: 18
   fleeDistance: 12

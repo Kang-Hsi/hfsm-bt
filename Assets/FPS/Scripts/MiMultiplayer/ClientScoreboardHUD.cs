@@ -17,6 +17,7 @@ public class ClientScoreboardHUD : NetworkBehaviour
     [SerializeField] float refreshIntervalSeconds = 0.25f;
 
     float m_NextRefreshTime;
+    float m_MatchStartTime;
     readonly StringBuilder m_Sb = new StringBuilder(512);
 
     static TMP_FontAsset s_CachedRobotoHudFont;
@@ -48,6 +49,7 @@ public class ClientScoreboardHUD : NetworkBehaviour
             return;
         }
 
+        m_MatchStartTime = Time.unscaledTime;
         EnsureUI();
     }
 
@@ -64,6 +66,14 @@ public class ClientScoreboardHUD : NetworkBehaviour
 
         m_Sb.Clear();
 
+        float elapsed = Time.unscaledTime - m_MatchStartTime;
+        int mins = (int)(elapsed / 60f);
+        int secs = (int)(elapsed % 60f);
+        m_Sb.Append("Time ").Append(mins.ToString("D2")).Append(':').Append(secs.ToString("D2"));
+        m_Sb.Append("   FPS ").Append(Mathf.RoundToInt(1f / Mathf.Max(0.0001f, Time.unscaledDeltaTime)));
+        m_Sb.AppendLine();
+        m_Sb.AppendLine();
+
         for (int i = 0; i < allStats.Length; i++)
         {
             var s = allStats[i];
@@ -71,11 +81,14 @@ public class ClientScoreboardHUD : NetworkBehaviour
             if (string.IsNullOrWhiteSpace(name))
                 name = $"Player {s.OwnerClientId}";
 
+            int kills = s.Kills.Value;
+            int deaths = s.Deaths.Value;
+            int score = kills - deaths;
+
             m_Sb.Append(name);
-            m_Sb.Append("  Kills: ");
-            m_Sb.Append(s.Kills.Value);
-            m_Sb.Append("  Deaths: ");
-            m_Sb.Append(s.Deaths.Value);
+            m_Sb.Append("  K ").Append(kills);
+            m_Sb.Append("  D ").Append(deaths);
+            m_Sb.Append("  Score ").Append(score >= 0 ? "+" : "").Append(score);
             m_Sb.AppendLine();
         }
 

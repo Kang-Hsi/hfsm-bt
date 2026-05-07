@@ -1,3 +1,4 @@
+# CAMBIOS: PRÁCTICAMENTE TODO EL README
 # Inteligencia Artificial para Videojuegos Práctica 3: Disturbios Orbitales
 
 ***Autores***
@@ -431,6 +432,61 @@ class SubMachineState: extends State, HierarchicalStateMachine:
             return [this] + currentState.getStates()
         else:
             return [this]
+```
+**5. Cargador de estados**
+```py
+
+public class HFSMLoader : MonoBehaviour
+    Dictionary<StateSO, State> states = new Dictionary<StateSO, State>();
+
+    public static HFSMLoader Instance { 
+        get; 
+        private set; 
+    }
+
+    void Awake()
+    {
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
+    }
+    public State GetState(StateSO so)
+    {
+        add(so);
+        return states[so];
+    }
+    private void add(StateSO s)
+    {
+        if (!states.ContainsKey(s))
+        {
+            states[s] = null;
+            State state = new State(s);
+            states[s] = state;
+        }
+    }
+}
+
+class HFSMLoader: (singleton)
+    # dictionary (key: StateSO; value: State)
+    states: Dict[]
+    
+    # we get states by adding ourself to our active children
+    function getState(so) -> State:
+        # if this data is not added in the dictionary, create a State and add it
+        add(so)
+        return states[so]
+
+    function add(so):
+         if !states.ContainsKey(s)):
+            states[s] = null
+            state = new State(s)
+            states[s] = state
 ``` 
 ## Implementación de cada apartado
 ### Apartado A
@@ -592,7 +648,7 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     - **BuscarArma:** buscar armas disponibles mienstras no haya enemigo cerca y que no dispongas todo tipo de armas.
     - **Merodeas:** por defecto elige un punto al azar del entorno y va hacia él.
 
-    ```Mermaid
+    ```mermaid
     ---
     config:
     theme: base
@@ -647,7 +703,7 @@ El uso de una máquina de estados jerárquica aporta múltiples beneficios:
 |✔|Desarrollo:<br>- Respawn del player<br> - Scripts básicos para HFSM (interfaces, hierarchy state machine y substate machine)<br> Documentación: Actualizar readme|28-4-2026|
 |✔|Desarrollo: Máquina de estados básica funcional con scriptable objects|29-4-2026|
 |✔|Desarrollo: Máquina con estado de caminar, encarar, disparar funcional con transiciones lógicamente diseñadas (sin ser herárquico)|5-5-2026|
-|✔|Documentación: Actualizar readme|7-5-2026|
+|✔|Documentación: Actualizar readme<br>Desarrollo: <br>- Máquina de estados con jerarquía<br> - HUD mostrando métricas|7-5-2026|
 ## Pruebas y métricas
 
 A continuación se detalla un plan de pruebas para verificar que se cumplen todos los requisitos del enunciado. Se organiza por apartados (A–E) según las características.
@@ -663,14 +719,15 @@ A continuación se detalla un plan de pruebas para verificar que se cumplen todo
     2. Confirmar que el agente controlado por el jugador aparece en uno de los puntos predefinidos del escenario.
     3. Comprobar que el personaje se puede mover correctamente (WASD).
     4. Comprobar que el personaje puede disparar y cambiar de arma.
-    5. Comprobar que el personaje puede correr, volar, agacharsee y saltar.
+    5. Comprobar que el personaje puede correr, agacharsee y saltar.
     ---
 - **Apartado C**
-    1. Confirmar que el agente recorre la prisión de manera autónoma.
-    2. Verificar que el agente evita obstáculos y paredes correctamente.
-    3. Verificar que el agente no se queda atascado en un solo lugar.
-    4. Confirmar que el agente se dirige hacia las armas y las recoge.
-    5. Confirmar que el agente detecta a otros prisioneros enemigos y los atacan.
+    1. Elegir UCM_Bot 
+    2. Confirmar que el agente recorre la prisión de manera autónoma.
+    3. Verificar que el agente evita obstáculos y paredes correctamente.
+    4. Verificar que el agente no se queda atascado en un solo lugar.
+    5. Confirmar que el agente se dirige hacia las armas y las recoge.
+    6. Confirmar que el agente detecta a otros prisioneros enemigos y los atacan.
     ---
 - **Apartado D**
     1. Confirmar que la máquina de estados finita jerárquica(HFSM) se carga correctamente desde el fichero externo.

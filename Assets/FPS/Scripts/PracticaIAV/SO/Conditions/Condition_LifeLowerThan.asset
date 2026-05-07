@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 37fb79f94888ffa4681c607e92baaadd, type: 3}
   m_Name: Condition_LifeLowerThan
   m_EditorClassIdentifier: Assembly-CSharp::LifeLowerThanConditionSO
-  lifeThreshold: 30
+  lifeThreshold: 100

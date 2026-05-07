@@ -31,7 +31,13 @@ public class EvadeActionSO : ActionSO
 
             if (bot.HasReachedCurrentDestination())
             {
-                bot.TryFleeFromTarget(speed, fleeDistance);
+                bool canFlee = bot.TryFleeFromTarget(speed, fleeDistance);
+                if (!canFlee && bot.Target != null)
+                {
+                    Debug.Log("ACORRALADO - CONTRAATACAR");
+                    bot.FaceTowardsWorldPointSmooth(bot.Target.transform.position);
+                    bot.TryFireCurrentWeaponPrimary(true, true, false);
+                }
             }
         }
     }

@@ -104,7 +104,7 @@ Desarrollamos un prototipo que nos permitirá:
 
 - **C**. La navegación del agente utiliza la malla de navegación de Unity, siendo su comportamiento por defecto intentar recorrer la prisión buscando armas y atacar a otros prisioneros.
 
-- **D**. La decisión del agente se usa el código de una máquina de estados finita jerárquica cargada desde un fichero .cs.
+- **D**. La decisión del agente se basa en una máquina de estados finita jerárquica cuyo contenido (estados, transiciones, condiciones y acciones) está definido en `ScriptableObject` editables desde el inspector de Unity. El componente `HFSMLoader` los instancia en tiempo de ejecución.
 
 - **E**. El agente busca maximizar la métrica principal del juego: *número de enemigos eliminado – número de veces que he sido eliminado*. También se muestran por pantalla otras métricas interesantes como número de armas conseguidas, número de utensilios conseguidos, número de vigilantes robóticos eliminados… todo ello con el contexto de la duración de la partida en segundos y el ratio de fotogramas por segundo.
 
@@ -475,13 +475,14 @@ La arquitectura se compone de una **máquina de estados principal (global)** y v
 
 #### D.2. Máquina de estados global
 
-La máquina de estados global actúa como el núcleo del sistema de decisión y determina el estado general del agente en cada instante. Los estados principales definidos son:
+La máquina externa contiene un único `SubStateSO` raíz (`SO_RootState`) que envuelve a las tres submáquinas funcionales. `SO_RootState` arranca por defecto en `Explore` y, en cada tick, evalúa sus tres transiciones de salida:
 
-**Explorar:** comportamiento por defecto. El agente recorre el entorno utilizando la malla de navegación de Unity y waypoints, explorando distintas estancias, buscando recursos y evaluando oportunidades.
-**Combatir:** se activa cuando el agente detecta enemigos. En este estado se gestionan todas las acciones ofensivas.
-**Supervivencia:** prioriza la supervivencia del agente cuando su salud es baja, forzando comportamientos defensivos.
+- **Root → Explore** (`Condition_NoEnemyNear`, radio 20): comportamiento por defecto cuando no hay enemigos cerca y la vida es suficiente.
+- **Root → Combat** (`Condition_EnemyNear`, radio 8): se activa cuando un enemigo entra en el radio de detección.
+- **Root → Survive** (`Condition_LifeLowerThan`, umbral 100 sobre `MaxHealth = 200`): se prioriza siempre que la vida cae por debajo del 50%, independientemente de la presencia de enemigos.
 
-Las transiciones entre estos estados se basan en condiciones del entorno y del propio agente, tales como la visibilidad de enemigos o la cantidad de vida.
+Los tres submáquinas también disponen de transiciones de salida (`level = 1`) hacia Root cuando se cumplen condiciones de "abandonar el comportamiento", por ejemplo `TargetDead` para salir de Combat o `CompletelyCured` para salir de Survive.
+
 ```mermaid
 ---
 config:
@@ -490,25 +491,19 @@ config:
 ---
 stateDiagram
   direction TB
-  state VidaSuficiente? <<choice>>
-  state HayEnemigo? <<choice>>
 
-  [*] --> Explorar
+  [*] --> Explore
+  Explore --> Combat: EnemyNear
+  Explore --> Survive: LifeLowerThan
 
-  Explorar --> Supervivencia: vida baja
-  Explorar --> Combatir: enemigo visible
+  Combat --> Explore: TargetDead
+  Combat --> Survive: LifeLowerThan
 
-  Supervivencia --> VidaSuficiente?: ¿vida suficiente?
-  VidaSuficiente? --> Supervivencia: No
-  VidaSuficiente? --> Explorar: Sí
+  Survive --> Explore: CompletelyCured
 
-  Combatir --> HayEnemigo?: ¿hay enemigos?
-  HayEnemigo? --> Combatir: Sí
-  HayEnemigo? --> Explorar: No
-
-  style Explorar fill:transparent
-  style Supervivencia fill:#FFCDD2
-  style Combatir fill:#FFE0B2
+  style Explore fill:#BBDEFB
+  style Combat fill:#FFE0B2
+  style Survive fill:#FFCDD2
 ```
 ---
 
@@ -518,11 +513,19 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
 
 - **3.1. Submáquina de Combate**
 
-    Es la más compleja del sistema y controla las interacciones directas con otros agentes. Incluye los siguientes estados:
+    Controla las interacciones directas con otros agentes cuando hay enemigos cerca. La submáquina alterna entre dos estados según el nivel de munición del arma activa:
 
-    - **Decidir:** evalúa las condiciones de vida del agente y la presencia de enemigos para determinar si debe continuar combatiendo o salir del combate.
-    - **SeleccionarObjetivo:** decide cual es el enemigo objetivo. Selecciona al de menor vida como objetivo prioritario. 
-    - **Atacar:** ejecución de acciones ofensivas contra el objetivo actual: apuntar, disparar y moverse lateralmente. 
+    - **SO_SelectWeaponState:** ejecuta `SelectWeaponAction`, que llama a `bot.FindValidWeapon()` y conmuta a un slot con munición útil (>50%).
+    - **SO_ShootSate:** elige al enemigo de menor vida (`SelectTargetAction` en entrada), gira hacia él (`FaceAction`) y dispara (`ShootAction`) cada tick.
+
+    Transiciones internas (`level = 0`):
+    - `SelectWeapon → Shoot` cuando el arma actual tiene ≥50% de munición (`Condition_Ammo`).
+    - `Shoot → SelectWeapon` cuando el arma actual cae a ≤33% (`Condition_NoAmmo`).
+
+    Salidas a `Root` (`level = 1`):
+    - `Combat → Root` cuando el objetivo muere (`Condition_TargetDead`), volviendo a Explore.
+    - `Combat → Root (Survive)` cuando la vida cae por debajo del umbral (`Condition_LifeLowerThan`).
+
     ```mermaid
     ---
     config:
@@ -531,32 +534,32 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     ---
     stateDiagram
     direction TB
-    state VidaSuficiente? <<choice>>
-    state HayEnemigo? <<choice>>
 
-    [*] --> Decidir
-    Decidir --> VidaSuficiente?:VidaSuficiente?
-    VidaSuficiente? --> [*]:NO, vida baja, Supervivencia
-    VidaSuficiente? --> HayEnemigo?:SI, vida suficiente
-    HayEnemigo? --> [*]:no hay enemigo, Explorar
-    HayEnemigo? --> SeleccionarObjetivo:hay enemigo
+    [*] --> SelectWeapon
+    SelectWeapon --> Shoot: Ammo >= 50%
+    Shoot --> SelectWeapon: Ammo <= 33%
+    Shoot --> [*]: TargetDead / LifeLow
+    SelectWeapon --> [*]: TargetDead / LifeLow
 
-    SeleccionarObjetivo --> SeleccionarArma
-    SeleccionarArma --> Atacar:enemigo con menor vida
-    Atacar --> Decidir:enemigo muerto
-
-    style Decidir fill:transparent
-    style Perseguir fill:#BBDEFB
-    style SeleccionarObjetivo fill:#FFCDD2
-    style Atacar fill:#C8E6C9
+    style SelectWeapon fill:#FFE0B2
+    style Shoot fill:#C8E6C9
     ```
 ---
 
 - **3.2. Submáquina de Supervivencia**
-    Gestiona el comportamiento defensivo del agente cuando tiene vida baja:
-    - **Evadir:** el agente huye del peligro corriendo a doble de velocidad.
-    - **BuscarBotequín:** buscar de botiquines en el entorno. Una vez encontrado el botiquín el agente lo usa, y comprueba si tiene suficiente vida para salir del estado de supervivencia.
-    
+
+    Se activa cuando la vida cae por debajo del umbral de `Condition_LifeLowerThan` (100, sobre `MaxHealth = 200`). Por defecto el agente busca botiquines, pero si un enemigo se acerca demasiado se detiene a defenderse antes de continuar curándose.
+
+    - **SO_FindHealth:** estado inicial. Llama a `PickupHeatlhAction`, que busca el botiquín activo más cercano (`bot.TryPickHealth`, basado en `FindObjectsByType<HealthPickup>`) y se desplaza hacia él. `Reset_Action` en entrada detiene la navegación previa y suelta el gatillo del arma.
+    - **SO_DefendState:** estado de "plantarse y disparar". En entrada ejecuta `SelectWeaponAction` para conmutar a un arma válida. En cada tick: `SelectTargetAction` (elige al enemigo de menor vida en radio 20), `FaceAction` (apunta) y `ShootAction` (dispara).
+
+    Transiciones internas (`level = 0`):
+    - `FindHealth → Defend` cuando un enemigo entra en el radio de defensa (`Condition_EnemyVeryNear`, radio 4).
+    - `Defend → FindHealth` cuando el objetivo muere (`Condition_TargetDead`), retomando la búsqueda de botiquín.
+
+    Salida a `Root` (`level = 1`):
+    - `Survive → Root` cuando la vida está al máximo (`Condition_CompletelyCured`).
+
     ```mermaid
     ---
     config:
@@ -565,34 +568,34 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     ---
     stateDiagram
     direction TB
-    state BotiquinCerca? <<choice>>
-    state EnemigoCerca? <<choice>>
-    state VidaSuficiente? <<choice>>
 
-    [*] --> EnemigoCerca?:Enemigo Cerca?
-    EnemigoCerca? --> Evadir:SI
-    EnemigoCerca? --> BuscarBotiquin:NO
+    [*] --> FindHealth
+    FindHealth --> Defend: EnemyVeryNear (4m)
+    Defend --> FindHealth: TargetDead
+    FindHealth --> [*]: CompletelyCured
+    Defend --> [*]: CompletelyCured
 
-    BuscarBotiquin --> BotiquinCerca?:BotiquínCerca?
-    BotiquinCerca? --> VidaSuficiente?:SI, VidaSuficiente?
-    BotiquinCerca? --> BuscarBotiquin:NO
-    VidaSuficiente? --> [*]: SI
-    VidaSuficiente? --> BuscarBotiquin: NO
-
-    style Evadir fill:#FFCDD2
-    style BuscarBotiquin fill:#FFF9C4
-    style Correr fill:#FFE0B2
+    style FindHealth fill:#FFF9C4
+    style Defend fill:#FFCDD2
     ```
 ---
 
 - **3.3. Submáquina de Exploración**
-    Encargada de gestionar de forma oportunista los recursos del entorno durante la exploración, permitiendo al agente recoger, evaluar y actualizar su equipamiento en función de la situación, con el objetivo de mejorar su capacidad ofensiva, su supervivencia y su movilidad:
 
-    - **Evaluar:** detecta hay algun objeto que se pueda recoger en el entorno.
-    - **BuscarArma:** buscar armas disponibles mienstras no haya enemigo cerca y que no dispongas todo tipo de armas.
-    - **Merodeas:** por defecto elige un punto al azar del entorno y va hacia él.
+    Comportamiento por defecto cuando no hay enemigos cerca ni vida baja. Su objetivo es preparar al agente para el combate completando el inventario de armas; si ya las tiene todas, deambula por el escenario.
 
-    ```Mermaid
+    - **SO_FindWeaponState:** localiza el `WeaponPickup` más cercano cuyo prefab el bot **aún no posee** (filtra los ya recogidos consultando `PlayerWeaponsManager.HasWeapon`) y se desplaza hacia él (`PickWeaponAction`).
+    - **SO_WanderState:** cuando el bot ya tiene todas las armas, elige un punto aleatorio en la malla de navegación y se mueve a él (`WanderAction`).
+
+    Transiciones internas (`level = 0`):
+    - `FindWeapon → Wander` cuando se poseen todos los tipos de arma (`Condition_HasAllWeapons`, basado en slots ocupados de `PlayerWeaponsManager`).
+    - `Wander → FindWeapon` cuando deja de tenerse el conjunto completo (`Condition_NoHasAllWeapons`).
+
+    Salidas a `Root` (`level = 1`):
+    - `Explore → Root` cuando entra un enemigo en rango (`Condition_EnemyNear`).
+    - `Explore → Root (Survive)` cuando la vida cae por debajo del umbral.
+
+    ```mermaid
     ---
     config:
     theme: base
@@ -600,21 +603,15 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     ---
     stateDiagram
     direction TB
-    [*] --> Evaluar
 
-    state ArmaCompleta <<choice>>
-    state EnemigoCerca <<choice>>
+    [*] --> FindWeapon
+    FindWeapon --> Wander: HasAllWeapons
+    Wander --> FindWeapon: NoHasAllWeapons
+    FindWeapon --> [*]: EnemyNear / LifeLow
+    Wander --> [*]: EnemyNear / LifeLow
 
-    Evaluar --> EnemigoCerca: Enemigo cerca?
-    EnemigoCerca -->[*]: SI, salir a Combatir
-    EnemigoCerca--> ArmaCompleta: NO, Todas las armas?
-
-    ArmaCompleta --> Merodear: SI
-    ArmaCompleta --> BuscarArma: No
-
-    BuscarArma --> Evaluar
-    Merodear-->Evaluar
-
+    style FindWeapon fill:#BBDEFB
+    style Wander fill:#E1BEE7
     ```
 ---
 
@@ -630,11 +627,17 @@ El uso de una máquina de estados jerárquica aporta múltiples beneficios:
 ---
 
 ### Apartado E
-- El agente inteligente ha sido diseñado para maximizar la métrica principal del juego, definida como la diferencia entre el número de enemigos eliminados y el número de veces que el propio agente ha sido eliminado (*kills - deaths*). Esta métrica se utiliza como indicador principal del rendimiento y eficacia del comportamiento implementado. Para conseguir eso, se ha priorizado las transiciones al estado de combate o recuperación (dependiendo del contexto) antes que el estado de exploración.
+- El agente inteligente ha sido diseñado para maximizar la métrica principal del juego, definida como la diferencia entre el número de enemigos eliminados y el número de veces que el propio agente ha sido eliminado (*Kills - Deaths*). Las prioridades de la HFSM (Survive > Combat > Explore) y los umbrales asociados (`LifeLowerThan = 100`, radio de combate 8m, etc.) están afinados para favorecer esta métrica.
 
-* Se han agregado más elementos de UI para que, en el HUD, se muestren las métricas complementarias, entre las que se incluyen el número de armas obtenidas, utensilios recogidos y vigilantes robóticos eliminados.
+- El HUD se implementa en el componente `ClientScoreboardHUD` (`Assets/FPS/Scripts/MiMultiplayer/ClientScoreboardHUD.cs`). El componente es **autohospedado**: si no encuentra un `Canvas` Screen-Space en escena, crea uno propio con `CanvasScaler` configurado a referencia 1920×1080. Basta con dejar el componente activo en cualquier `GameObject` de la escena de juego (p. ej. un `MatchHUD` vacío) para que aparezca el HUD.
 
-* Asimismo, se proporciona un timer y otro indicador de FPS para presentar datos de contexto relevantes, como la duración total de la partida en segundos y la tasa de fotogramas por segundo (FPS) respectivamente, permitiendo evaluar tanto el rendimiento del agente como el desempeño general de la simulación en tiempo real.
+- El HUD muestra dos paneles, ambos anclados al borde superior derecho de la pantalla:
+  1. **Cabecera (`Time / FPS`):** duración de la partida en formato `MM:SS` y ratio de fotogramas por segundo, ambos actualizados cada `refreshIntervalSeconds` (0,25 s por defecto).
+  2. **Marcador (por jugador):** una línea por cada `PlayerNameTag` activo con el nombre del jugador, `Kills`, `Deaths` y `Score = Kills − Deaths`. El bot y el jugador humano comparten formato.
+
+- Los datos provienen de los `NetworkVariable<int>` `Kills` y `Deaths` de cada `PlayerNameTag`. Los incrementos los gestionan dos rutas en el servidor:
+  - **Eliminar a un vigilante robótico:** `EnemyController.OnDie` envía `SendMessage("AddKillServer")` al *root* del último damage source, que llega a `PlayerNameTag.AddKillServer` y suma 1 a `Kills`.
+  - **Muertes del bot/jugador:** `PlayerRespawner.HandleDeath` incrementa `Deaths` y, si el último atacante es otro `PlayerNameTag`, también su `Kills`.
 
 ## Evolución
 |**Estado**|**Tarea**|**Fecha**|
@@ -647,6 +650,8 @@ El uso de una máquina de estados jerárquica aporta múltiples beneficios:
 |✔|Desarrollo:<br>- Respawn del player<br> - Scripts básicos para HFSM (interfaces, hierarchy state machine y substate machine)<br> Documentación: Actualizar readme|28-4-2026|
 |✔|Desarrollo: Máquina de estados básica funcional con scriptable objects|29-4-2026|
 |✔|Desarrollo: Máquina con estado de caminar, encarar, disparar funcional con transiciones lógicamente diseñadas (sin ser herárquico)|5-5-2026|
+|✔|Desarrollo: HFSM jerárquica completa con submáquinas Explore / Combat / Survive|7-5-2026|
+|✔|Desarrollo: Estado `Defend` y HUD con tiempo, FPS y `Kills/Deaths/Score`|7-5-2026|
 |✔|Documentación: Actualizar readme|7-5-2026|
 ## Pruebas y métricas
 

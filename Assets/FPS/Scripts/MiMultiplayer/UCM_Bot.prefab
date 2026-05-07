@@ -1829,7 +1829,7 @@ MonoBehaviour:
   AimingAnimationSpeed: 14
   DefaultFov: 60
   WeaponFovMultiplier: 1
-  WeaponSwitchDelay: 0.2
+  WeaponSwitchDelay: 0.05
   FpsWeaponLayer:
     serializedVersion: 2
     m_Bits: 1024

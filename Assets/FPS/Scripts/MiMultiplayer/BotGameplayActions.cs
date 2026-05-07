@@ -432,55 +432,38 @@ public class BotGameplayActions : MonoBehaviour
 
     public bool TryPickAWeapon(Vector3 origin, out Vector3 result)
     {
-        var points = WaypointsManager.Instance.weaponWaypoints;
-
-        if (points.Count == 0)
-        {
-            result = origin;
-            return false;
-        }
-        else
-        {
-            Transform nearest = WaypointsManager.Instance.GetNearestWaypoint(origin, points);
-            if (nearest == null)
-            {
-                result = origin;
-                return false;
-            }
-            result = nearest.position;
-            return true;
-        }
+        var pickups = Object.FindObjectsByType<WeaponPickup>(FindObjectsSortMode.None);
+        return TryNearestActive(origin, pickups, out result);
     }
 
     //find medkit
     public bool TryPickHealth(Vector3 origin, out Vector3 result)
     {
-        var health = WaypointsManager.Instance.medkitWaypoints;
+        var pickups = Object.FindObjectsByType<HealthPickup>(FindObjectsSortMode.None);
+        return TryNearestActive(origin, pickups, out result);
+    }
 
-        if (health.Count == 0)
-        {
-            result = origin;
-            return false;
-        }
-        else
-        {
-            Vector3 resultPos = health[0].transform.position;
-            float minDist = Vector3.SqrMagnitude(resultPos - origin);
+    static bool TryNearestActive<T>(Vector3 origin, T[] components, out Vector3 result) where T : Component
+    {
+        Vector3 best = Vector3.zero;
+        float bestDist = float.MaxValue;
+        bool found = false;
 
-            foreach (var p in health)
+        foreach (var c in components)
+        {
+            if (c == null || !c.gameObject.activeInHierarchy) continue;
+            Vector3 pos = c.transform.position;
+            float d = (pos - origin).sqrMagnitude;
+            if (d < bestDist)
             {
-                float currentDist = Vector3.SqrMagnitude(p.transform.position - origin);
-                if (currentDist < minDist)
-                {
-                    minDist = currentDist;
-                    resultPos = p.transform.position;
-                }
+                bestDist = d;
+                best = pos;
+                found = true;
             }
-
-            result = resultPos;
-            return true;
         }
 
+        result = found ? best : origin;
+        return found;
     }
 
     public bool TryPickRandomNavMeshPoint(Vector3 origin, float radius, out Vector3 result)

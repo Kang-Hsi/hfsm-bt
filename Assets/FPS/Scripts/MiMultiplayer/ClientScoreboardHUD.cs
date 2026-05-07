@@ -78,9 +78,9 @@ public class ClientScoreboardHUD : MonoBehaviour
             int score = kills - deaths;
 
             m_Sb.Append(name);
-            m_Sb.Append("  K ").Append(kills);
-            m_Sb.Append("  D ").Append(deaths);
-            m_Sb.Append("  Score ").Append(score >= 0 ? "+" : "").Append(score);
+            m_Sb.Append("   Kills ").Append(kills);
+            m_Sb.Append("   Deaths ").Append(deaths);
+            m_Sb.Append("   Score ").Append(score >= 0 ? "+" : "").Append(score);
             m_Sb.AppendLine();
         }
 
@@ -120,7 +120,7 @@ public class ClientScoreboardHUD : MonoBehaviour
         rt.anchorMin = new Vector2(1f, 1f);
         rt.anchorMax = new Vector2(1f, 1f);
         rt.pivot = new Vector2(1f, 1f);
-        rt.anchoredPosition = new Vector2(-16f, -16f);
+        rt.anchoredPosition = new Vector2(-16f, -240f);
         rt.sizeDelta = new Vector2(640f, 420f);
 
         scoreboardText = go.AddComponent<TextMeshProUGUI>();

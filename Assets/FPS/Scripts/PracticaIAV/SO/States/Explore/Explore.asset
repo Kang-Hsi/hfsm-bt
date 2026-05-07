@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa2c4dfed0cd1a74e9ee06ce35df7f59, type: 3}
+  m_Name: Explore
+  m_EditorClassIdentifier: Assembly-CSharp::SubStateSO
+  transitions:
+  - {fileID: 11400000, guid: a1cad9549f6bbb048b5c46ff8e3722fa, type: 2}
+  - {fileID: 11400000, guid: 8f0f1eca47b9f354dbc5bc1d36cc29bf, type: 2}
+  entryActions: []
+  exitActions: []
+  actions: []
+  initialState: {fileID: 11400000, guid: 7cfaeae9a43432740a07d50c2ea879b5, type: 2}

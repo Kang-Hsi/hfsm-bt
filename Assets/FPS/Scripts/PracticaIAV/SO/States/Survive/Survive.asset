@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+<<<<<<<< HEAD:Assets/FPS/Scripts/PracticaIAV/SO/States/SO_Super.asset
+  m_Script: {fileID: 0}
+  m_Name: SO_Super
+========
+  m_Script: {fileID: 11500000, guid: fa2c4dfed0cd1a74e9ee06ce35df7f59, type: 3}
+  m_Name: Survive
+>>>>>>>> main:Assets/FPS/Scripts/PracticaIAV/SO/States/Survive/Survive.asset
+  m_EditorClassIdentifier: Assembly-CSharp::SubStateSO
+  transitions:
+  - {fileID: 11400000, guid: 706c0d849ff1b7149bad864241e04d6d, type: 2}
+  entryActions: []
+  exitActions: []
+  actions: []
+  initialState: {fileID: 11400000, guid: 1fc5b019b0ff4e74ca8be9d7ed768bbf, type: 2}

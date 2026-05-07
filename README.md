@@ -486,7 +486,7 @@ Los tres submáquinas también disponen de transiciones de salida (`level = 1`) 
 ```mermaid
 ---
 config:
-  theme: base
+  theme: dark
   look: neo
 ---
 stateDiagram
@@ -500,10 +500,6 @@ stateDiagram
   Combat --> Survive: LifeLowerThan
 
   Survive --> Explore: CompletelyCured
-
-  style Explore fill:#BBDEFB
-  style Combat fill:#FFE0B2
-  style Survive fill:#FFCDD2
 ```
 ---
 
@@ -529,7 +525,7 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     ```mermaid
     ---
     config:
-    theme: base
+    theme: dark
     look: neo
     ---
     stateDiagram
@@ -540,9 +536,6 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     Shoot --> SelectWeapon: Ammo <= 33%
     Shoot --> [*]: TargetDead / LifeLow
     SelectWeapon --> [*]: TargetDead / LifeLow
-
-    style SelectWeapon fill:#FFE0B2
-    style Shoot fill:#C8E6C9
     ```
 ---
 
@@ -563,7 +556,7 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     ```mermaid
     ---
     config:
-    theme: base
+    theme: dark
     look: neo
     ---
     stateDiagram
@@ -574,9 +567,6 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     Defend --> FindHealth: TargetDead
     FindHealth --> [*]: CompletelyCured
     Defend --> [*]: CompletelyCured
-
-    style FindHealth fill:#FFF9C4
-    style Defend fill:#FFCDD2
     ```
 ---
 
@@ -598,7 +588,7 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     ```mermaid
     ---
     config:
-    theme: base
+    theme: dark
     look: neo
     ---
     stateDiagram
@@ -609,9 +599,6 @@ Cada estado principal contiene una submáquina de estados que gestiona el compor
     Wander --> FindWeapon: NoHasAllWeapons
     FindWeapon --> [*]: EnemyNear / LifeLow
     Wander --> [*]: EnemyNear / LifeLow
-
-    style FindWeapon fill:#BBDEFB
-    style Wander fill:#E1BEE7
     ```
 ---
 

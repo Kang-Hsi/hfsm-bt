@@ -12,8 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0506ffb2e3b599c4db876bf6743ccd42, type: 3}
   m_Name: SO_FindHealth
   m_EditorClassIdentifier: Assembly-CSharp::StateSO
-  transitions:
-  - {fileID: 11400000, guid: abc8f2a099ac4ef4d87449624ab4a92a, type: 2}
+  transitions: []
   entryActions:
   - {fileID: 11400000, guid: e9b2475392bd97b4ab7f2783e515c447, type: 2}
   exitActions: []

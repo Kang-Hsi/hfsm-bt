@@ -15,6 +15,7 @@ public class SelectWeaponActionSO : ActionSO
     {
         public void Execute(GameObject agent)
         {
+            Debug.Log("eELGIR ARMA");
             var bot = agent.GetComponent<BotGameplayActions>();
             if (bot == null) return;
             WeaponController current = bot.GetActiveWeaponOrNull();

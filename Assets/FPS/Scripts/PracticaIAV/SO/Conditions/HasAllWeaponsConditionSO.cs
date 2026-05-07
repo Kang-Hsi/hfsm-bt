@@ -27,6 +27,7 @@ public class HasAllWeaponsConditionSO : ConditionSO
                 return false;
 
             bool res = WaypointsManager.Instance.weaponWaypoints.Count == 0;
+            Debug.Log("tiene todo arma: " + res);
             return inverse ? !res : res;
         }
     }

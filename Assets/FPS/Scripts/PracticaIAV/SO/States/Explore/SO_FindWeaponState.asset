@@ -13,8 +13,6 @@ MonoBehaviour:
   m_Name: SO_FindWeaponState
   m_EditorClassIdentifier: Assembly-CSharp::StateSO
   transitions:
-  - {fileID: 11400000, guid: fe005df9695736744898675b28d0c83d, type: 2}
-  - {fileID: 11400000, guid: 4141ba5cdbde7994bba305eea5d4b6ea, type: 2}
   - {fileID: 11400000, guid: a7993c21ce699bd4993bdb5f5852419f, type: 2}
   entryActions:
   - {fileID: 11400000, guid: e9b2475392bd97b4ab7f2783e515c447, type: 2}

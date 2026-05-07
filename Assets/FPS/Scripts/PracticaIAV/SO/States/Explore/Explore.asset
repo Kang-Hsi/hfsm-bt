@@ -9,13 +9,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0506ffb2e3b599c4db876bf6743ccd42, type: 3}
-  m_Name: SO_CombatState
+  m_Script: {fileID: 11500000, guid: fa2c4dfed0cd1a74e9ee06ce35df7f59, type: 3}
+  m_Name: Explore
   m_EditorClassIdentifier: Assembly-CSharp::SubStateSO
   transitions:
-  - {fileID: 11400000, guid: 0ba18853e3cd8c0438cd919b5e1c7be2, type: 2}
-  - {fileID: 11400000, guid: 5d1ed157c9297054d80d4fa712723b2e, type: 2}
-  - {fileID: 11400000, guid: 3b17aa2397b3c444eac703090f7f0d1c, type: 2}
+  - {fileID: 11400000, guid: a1cad9549f6bbb048b5c46ff8e3722fa, type: 2}
+  - {fileID: 11400000, guid: 8f0f1eca47b9f354dbc5bc1d36cc29bf, type: 2}
   entryActions: []
   exitActions: []
   actions: []
+  initialState: {fileID: 11400000, guid: 7cfaeae9a43432740a07d50c2ea879b5, type: 2}

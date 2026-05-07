@@ -13,6 +13,6 @@ MonoBehaviour:
   m_Name: Root-Survive
   m_EditorClassIdentifier: Assembly-CSharp::TransitionSO
   condition: {fileID: 11400000, guid: 7bc21b08845d4314f8fd16595de56f56, type: 2}
-  targetState: {fileID: 11400000, guid: 8e2d8db3a46212d4090d2ee85731d7e5, type: 2}
+  targetState: {fileID: 11400000, guid: f482b01326924b94b921cb9bf65f11da, type: 2}
   level: 0
   actions: []

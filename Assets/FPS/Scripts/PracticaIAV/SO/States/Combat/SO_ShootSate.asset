@@ -13,8 +13,6 @@ MonoBehaviour:
   m_Name: SO_ShootSate
   m_EditorClassIdentifier: Assembly-CSharp::StateSO
   transitions:
-  - {fileID: 11400000, guid: 2dcf562adc85e1445ad0c55525dc07cd, type: 2}
-  - {fileID: 11400000, guid: 7f8a19ed0e6ef5b41a9fac9bbfed3acc, type: 2}
   - {fileID: 11400000, guid: 1e42ab668c83cf746bf9f6b67f920889, type: 2}
   entryActions: []
   exitActions: []

@@ -54,7 +54,7 @@ public class ClientScoreboardHUD : MonoBehaviour
         EnsureUI();
         if (scoreboardText == null) return;
 
-        var allStats = FindObjectsByType<PlayerStats>(FindObjectsSortMode.None);
+        var tags = FindObjectsByType<PlayerNameTag>(FindObjectsSortMode.None);
 
         m_Sb.Clear();
 
@@ -66,15 +66,15 @@ public class ClientScoreboardHUD : MonoBehaviour
         m_Sb.AppendLine();
         m_Sb.AppendLine();
 
-        for (int i = 0; i < allStats.Length; i++)
+        for (int i = 0; i < tags.Length; i++)
         {
-            var s = allStats[i];
-            string name = s.PlayerName.Value.ToString();
+            var t = tags[i];
+            string name = t.NetworkedName.Value.ToString();
             if (string.IsNullOrWhiteSpace(name))
-                name = $"Player {s.OwnerClientId}";
+                name = $"Player {t.OwnerClientId}";
 
-            int kills = s.Kills.Value;
-            int deaths = s.Deaths.Value;
+            int kills = t.Kills.Value;
+            int deaths = t.Deaths.Value;
             int score = kills - deaths;
 
             m_Sb.Append(name);

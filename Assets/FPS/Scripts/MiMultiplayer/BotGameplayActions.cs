@@ -432,8 +432,33 @@ public class BotGameplayActions : MonoBehaviour
 
     public bool TryPickAWeapon(Vector3 origin, out Vector3 result)
     {
-        var pickups = Object.FindObjectsByType<WeaponPickup>(FindObjectsSortMode.None);
-        return TryNearestActive(origin, pickups, out result);
+        var points = WaypointsManager.Instance.weaponWaypoints;
+
+        Transform nearest = null;
+        float minDist = float.MaxValue;
+
+        foreach (var t in points)
+        {
+            if (t == null || !t.gameObject.activeInHierarchy) continue;
+            var pickup = t.GetComponent<WeaponPickup>();
+            if (pickup == null) continue;
+            if (m_Weapons != null && pickup.WeaponPrefab != null && m_Weapons.HasWeapon(pickup.WeaponPrefab) != null) continue;
+
+            float d = (t.position - origin).sqrMagnitude;
+            if (d < minDist)
+            {
+                minDist = d;
+                nearest = t;
+            }
+        }
+
+        if (nearest == null)
+        {
+            result = origin;
+            return false;
+        }
+        result = nearest.position;
+        return true;
     }
 
     //find medkit

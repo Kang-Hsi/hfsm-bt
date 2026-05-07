@@ -21,7 +21,7 @@ public class ClientScoreboardHUD : MonoBehaviour
     [SerializeField] int headerFontSize = 25;
 
     [Header("Layout marcador (Kills / Deaths)")]
-    [SerializeField] Vector2 scoreboardOffset = new(-12f, -350f);
+    [SerializeField] Vector2 scoreboardOffset = new(-12f, -380f);
     [SerializeField] int scoreboardFontSize = 30;
 
     [Header("Refresco")]

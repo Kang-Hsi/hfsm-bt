@@ -202,6 +202,9 @@ namespace Unity.FPS.Gameplay
             bool wasGrounded = IsGrounded;
             GroundCheck();
 
+            if (m_InputHandler.GetJumpInputDown())
+                Debug.Log($"[Jump] Space. IsGrounded={IsGrounded} y={transform.position.y:F2} velY={CharacterVelocity.y:F2}", this);
+
             // landing
             if (IsGrounded && !wasGrounded)
             {

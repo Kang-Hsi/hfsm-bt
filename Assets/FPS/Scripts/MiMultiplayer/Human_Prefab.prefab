@@ -1758,10 +1758,10 @@ MonoBehaviour:
   GravityDownForce: 20
   GroundCheckLayers:
     serializedVersion: 2
-    m_Bits: 1
+    m_Bits: 4294967295
   GroundCheckDistance: 1
   MaxSpeedOnGround: 9
-  MovementSharpnessOnGround: 15
+  MovementSharpnessOnGround: 30
   MaxSpeedCrouchedRatio: 0.5
   MaxSpeedInAir: 10
   AccelerationSpeedInAir: 25

@@ -217,45 +217,6 @@ public class NewMonoBehaviourScript : NetworkBehaviour
 
     void EnsureScoreboardUI()
     {
-        if (m_ScoreboardText != null) return;
-        if (!IsOwner) return;
-
-        // El Canvas que traen los prefabs está en World Space (m_RenderMode = 2),
-        // así que para un HUD en pantalla creamos nuestro propio Canvas Overlay local.
-        var hudCanvasGo = new GameObject("ScoreboardCanvas");
-        var canvas = hudCanvasGo.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.overrideSorting = true;
-        canvas.sortingOrder = 999;
-
-        var scaler = hudCanvasGo.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920, 1080);
-        scaler.matchWidthOrHeight = 0.5f;
-
-        hudCanvasGo.AddComponent<GraphicRaycaster>();
-
-        var go = new GameObject("ScoreboardText", typeof(RectTransform));
-        go.transform.SetParent(hudCanvasGo.transform, false);
-
-        var rt = (RectTransform)go.transform;
-        rt.anchorMin = new Vector2(1f, 1f);
-        rt.anchorMax = new Vector2(1f, 1f);
-        rt.pivot = new Vector2(1f, 1f);
-        rt.anchoredPosition = new Vector2(-16f, -16f);
-        rt.sizeDelta = new Vector2(640f, 420f);
-
-        m_ScoreboardText = go.AddComponent<TextMeshProUGUI>();
-        var hudFont = ResolveGameHudFont();
-        if (hudFont != null)
-            m_ScoreboardText.font = hudFont;
-        else if (TMP_Settings.defaultFontAsset != null)
-            m_ScoreboardText.font = TMP_Settings.defaultFontAsset;
-
-        m_ScoreboardText.fontSize = 18;
-        m_ScoreboardText.fontStyle = FontStyles.Normal;
-        m_ScoreboardText.enableWordWrapping = true;
-        m_ScoreboardText.alignment = TextAlignmentOptions.TopRight;
-        m_ScoreboardText.text = "";
+        //El marcador lo gestiona ClientScoreboardHUD a nivel de escena no creamos UI para evitar duplicar el HUD.
     }
 }

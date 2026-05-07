@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Data;
 using Unity.FPS.Game;
 using UnityEngine;
 using UnityEngine.Events;
@@ -75,12 +76,16 @@ namespace Unity.FPS.Gameplay
         public bool IsAiming { get; private set; }
         public bool IsPointingAtEnemy { get; private set; }
         public int ActiveWeaponIndex { get; private set; }
+        
+        private const int weaponSlotNumber = 9;
+        public int WeaponSlotNumber => weaponSlotNumber;
+        public int CollectedWeaponsNumber { get; private set; }
 
         public UnityAction<WeaponController> OnSwitchedToWeapon;
         public UnityAction<WeaponController, int> OnAddedWeapon;
         public UnityAction<WeaponController, int> OnRemovedWeapon;
 
-        WeaponController[] m_WeaponSlots = new WeaponController[9]; // 9 available weapon slots
+        WeaponController[] m_WeaponSlots = new WeaponController[weaponSlotNumber]; // 9 available weapon slots
         PlayerInputHandler m_InputHandler;
         PlayerCharacterController m_PlayerCharacterController;
         float m_WeaponBobFactor;
@@ -97,6 +102,7 @@ namespace Unity.FPS.Gameplay
 
         void Start()
         {
+            CollectedWeaponsNumber = 0;
             ActiveWeaponIndex = -1;
             m_WeaponSwitchState = WeaponSwitchState.Down;
 
@@ -539,6 +545,7 @@ namespace Unity.FPS.Gameplay
                         OnAddedWeapon.Invoke(weaponInstance, i);
                     }
 
+                    CollectedWeaponsNumber++;
                     return true;
                 }
             }

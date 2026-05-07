@@ -6,18 +6,22 @@ using UnityEngine.AI;
 public class EnemyNearConditionSO : ConditionSO
 {
     [SerializeField]
+    private bool inverseLogic = false;
+    [SerializeField]
     private float radius;
     public override ICondition Create()
     {
-        return new EnemyNearCondition(radius);
+        return new EnemyNearCondition(radius, inverseLogic);
     }
 
     private class EnemyNearCondition : ICondition
     {
         private float radius;
-        public EnemyNearCondition(float radius)
+        bool inverse;
+        public EnemyNearCondition(float radius, bool inverse)
         {
             this.radius = radius;
+            this.inverse = inverse;
         }
         public bool Test(GameObject agent)
         {
@@ -25,8 +29,8 @@ public class EnemyNearConditionSO : ConditionSO
             if (bot == null)
                 return false;
             bool res = bot.EnemyNear(radius);
-            Debug.Log($"hay enemigo cerca?: {res}");
-            return res;
+
+            return inverse ? !res : res;
         }
     }
 }

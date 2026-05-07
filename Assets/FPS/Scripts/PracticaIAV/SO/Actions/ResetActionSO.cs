@@ -16,8 +16,6 @@ public class ResetActionSO : ActionSO
             var bot = agent.GetComponent<BotGameplayActions>();
             if (bot == null) return;
 
-            Debug.Log("reseta");
-
             bot.ResetAI();
         }
     }

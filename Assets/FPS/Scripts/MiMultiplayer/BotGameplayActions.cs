@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Unity.FPS.Game;
 using Unity.FPS.Gameplay;
 using UnityEngine;
@@ -403,13 +404,11 @@ public class BotGameplayActions : MonoBehaviour
 
             Transform enemy = col.transform.root;
 
-            //simular la altura donde esta el arma
             Vector3 origin = transform.position + Vector3.up * 1.5f;
             Vector3 target = enemy.position + Vector3.up * 1.5f;
 
             Vector3 dir = (target - origin);
             float dist = dir.magnitude;
-
             dir.Normalize();
 
             // probar si hay muro entre medio
@@ -421,7 +420,7 @@ public class BotGameplayActions : MonoBehaviour
             m_target = enemy;
             return true;
         }
-
+        m_target = null;
         return false;
     }
 
@@ -429,5 +428,97 @@ public class BotGameplayActions : MonoBehaviour
     {
         StopNavigation();
         m_target = null;
+    }
+
+    public bool TryPickAWeapon(Vector3 origin, out Vector3 result)
+    {
+        var points = WaypointsManager.Instance.weaponWaypoints;
+
+        if (points.Count == 0)
+        {
+            result = origin;
+            return false;
+        }
+        else
+        {
+            Transform nearest = WaypointsManager.Instance.GetNearestWaypoint(origin, points);
+            if (nearest == null)
+            {
+                result = origin;
+                return false;
+            }
+            result = nearest.position;
+            return true;
+        }
+    }
+
+    //find medkit
+    public bool TryPickHealth(Vector3 origin, out Vector3 result)
+    {
+        var health = WaypointsManager.Instance.medkitWaypoints;
+
+        if (health.Count == 0)
+        {
+            result = origin;
+            return false;
+        }
+        else
+        {
+            Vector3 resultPos = health[0].transform.position;
+            float minDist = Vector3.SqrMagnitude(resultPos - origin);
+
+            foreach (var p in health)
+            {
+                float currentDist = Vector3.SqrMagnitude(p.transform.position - origin);
+                if (currentDist < minDist)
+                {
+                    minDist = currentDist;
+                    resultPos = p.transform.position;
+                }
+            }
+
+            result = resultPos;
+            return true;
+        }
+
+    }
+
+    public bool TryPickRandomNavMeshPoint(Vector3 origin, float radius, out Vector3 result)
+    {
+        for (int i = 0; i < 20; i++)
+        {
+            var rnd = Random.insideUnitSphere * radius;
+            var candidate = origin + rnd;
+            if (NavMesh.SamplePosition(candidate, out var hit, 2.0f, NavMesh.AllAreas))
+            {
+                result = hit.position;
+                return true;
+            }
+        }
+
+        result = origin;
+        return false;
+    }
+
+
+    //buscar arma para cambiar 
+    public int FindValidWeapon()
+    {
+        if (m_Weapons == null)
+            return -1;
+
+        List<int> validWeapons = new List<int>();
+
+        for (int i = 0; i < m_Weapons.WeaponSlotNumber; i++)
+        {
+            WeaponController w = m_Weapons.GetWeaponAtSlotIndex(i);
+            if (w == null || w.IsReloading || w.CurrentAmmoRatio <= 0.5f) continue;
+            else validWeapons.Add(i);
+        }
+        
+        if (validWeapons.Count == 0) return -1;
+
+        int randomIndex = Random.Range(0, validWeapons.Count);
+        return validWeapons[randomIndex];
     }
 }

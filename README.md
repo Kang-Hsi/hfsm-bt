@@ -1,4 +1,3 @@
-# CAMBIOS: PRÁCTICAMENTE TODO EL README
 # Inteligencia Artificial para Videojuegos Práctica 3: Disturbios Orbitales
 
 ***Autores***
@@ -17,7 +16,6 @@ El objetivo es usar una máquina de estados jeárquica, técnica frecuentemente 
 Todo el contenido del proyecto está disponible en este repositorio. Se utiliza Unity 6 **(6000.3.12f1).**
 
 En el repositorio se localiza el ejecutable de dicha práctica para poder experimentar los comportamientos.
-ENLACE
 
 # Introducción
 
@@ -40,6 +38,25 @@ Distinguimos dos tipos:
 # Punto de partida
 
 Se parte de un proyecto base proporcionado por el profesor y disponible en el siguiente repositorio: [fps-online](https://github.com/narratech/fps-online)
+
+A nivel arquitectónico, el jugador humano y el bot comparten "cuerpo" (`CharacterController`, animaciones, armas) y se diferencian en quién decide sus acciones: el humano por entrada de periféricos, el bot por la HFSM:
+
+```mermaid
+---
+config:
+  theme: dark
+  look: neo
+---
+flowchart LR
+  Input[Teclado / Ratón] --> PIH[PlayerInputHandler]
+  PIH --> PCC[PlayerCharacterController]
+  PCC --> CC[CharacterController + Animator]
+  CC --> Body1[Movimiento / disparo del<br>Human_Prefab]
+
+  HFSM[HFSM<br>HierarchicalStateMachine] --> BGA[BotGameplayActions<br>«fachada de acciones»]
+  BGA --> NMA[NavMeshAgent + PlayerWeaponsManager]
+  NMA --> Body2[Movimiento / disparo del<br>UCM_Bot]
+```
 
 A continuación, se enumera una serie de informaciones básicas del repositorio original:
 - *Human_Prefab* representa al jugador humano.
@@ -110,6 +127,25 @@ Desarrollamos un prototipo que nos permitirá:
 - **E**. El agente busca maximizar la métrica principal del juego: *número de enemigos eliminado – número de veces que he sido eliminado*. También se muestran por pantalla otras métricas interesantes como número de armas conseguidas, número de utensilios conseguidos, número de vigilantes robóticos eliminados… todo ello con el contexto de la duración de la partida en segundos y el ratio de fotogramas por segundo.
 
 # Diseño de la solución
+
+## Decisiones de diseño
+
+- **HFSM jerárquica frente a FSM plana.** Separa decisiones estratégicas (explorar / combatir / sobrevivir) de tácticas (qué arma usar, cuándo defenderse), y permite factorizar las transiciones globales una sola vez en el estado raíz.
+
+- **Diseño orientado a datos con `ScriptableObject`.** Estados, transiciones, condiciones y acciones se editan en el inspector como ficheros `.asset`, sin recompilar.
+
+- **Acciones desacopladas vía `BotGameplayActions`.** La HFSM invoca métodos de alto nivel (`TryFireCurrentWeaponPrimary`, `TryPickHealth`, …) sin conocer `PlayerCharacterController` ni `NavMeshAgent`.
+
+## Serialización de la HFSM
+
+El grafo HFSM se almacena como `ScriptableObject` en [Assets/FPS/Scripts/PracticaIAV/SO/](Assets/FPS/Scripts/PracticaIAV/SO/):
+
+- **`StateSO`** — listas de `entryActions`, `exitActions`, `actions` y `transitions`.
+- **`SubStateSO`** (extiende `StateSO`) — añade `initialState`; lo convierte en contenedor de submáquina.
+- **`TransitionSO`** — `condition`, `targetState`, `level` y acciones opcionales.
+- **`ActionSO` / `ConditionSO`** — abstractas; cada subclase concreta sobrescribe `Create()` para devolver `IAction` / `ICondition`.
+
+`HFSMLoader.GetState(StateSO)` mapea cada SO a su instancia runtime (`State` o `SubMachineState`) y la cachea en un diccionario, de modo que dos transiciones al mismo SO comparten la misma instancia.
 
 ## Controles del juego
 |Input|Función|
@@ -689,6 +725,7 @@ El uso de una máquina de estados jerárquica aporta múltiples beneficios:
 |✔|Desarrollo: HFSM jerárquica completa con submáquinas Explore / Combat / Survive|7-5-2026|
 |✔|Desarrollo: Estado `Defend` y HUD con tiempo, FPS y `Kills/Deaths/Score`|7-5-2026|
 |✔|Documentación: Actualizar readme|7-5-2026|
+|✔|Documentación: Vídeo de demostración añadido|7-5-2026|
 ## Pruebas y métricas
 
 A continuación se detalla un plan de pruebas para verificar que se cumplen todos los requisitos del enunciado. Se organiza por apartados (A–E) según las características.
@@ -738,7 +775,7 @@ Durante el desarrollo se han abordado problemas típicos como la diferencia entr
 
 En conjunto, la práctica no solo cumple los objetivos planteados, sino que también sirve como base sólida para futuras ampliaciones, como la introducción de comportamientos más complejos (árboles de comportamiento) o mejoras en la percepción y toma de decisiones de los agentes.
 ### Vídeo explicativo
-[Vídeo de demostración en YouTube]TODO
+[Vídeo de demostración en YouTube](https://youtu.be/gRNmIhG2XhA)
     
 ## Licencia
 - Uso educativo y de investigación - UCM

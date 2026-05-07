@@ -24,7 +24,10 @@ public class LifeLowerThanConditionSO : ConditionSO
 
         public bool Test(GameObject agent)
         {
-            return false;
+            var health = agent.GetComponent<Health>();
+            if (health == null)
+                return false;
+            return health.CurrentHealth < lifeThreshold;
         }
     }
 }

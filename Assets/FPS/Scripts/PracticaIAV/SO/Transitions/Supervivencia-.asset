@@ -9,11 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: SO_CombatState
-  m_EditorClassIdentifier: Assembly-CSharp::SubStateSO
-  transitions: []
-  entryActions: []
-  exitActions: []
+  m_Script: {fileID: 11500000, guid: 2300b302336753f4b96a9e437f5255b6, type: 3}
+  m_Name: Supervivencia-
+  m_EditorClassIdentifier: Assembly-CSharp::TransitionSO
+  condition: {fileID: 0}
+  targetState: {fileID: 0}
+  level: 0
   actions: []
-  initialState: {fileID: 0}

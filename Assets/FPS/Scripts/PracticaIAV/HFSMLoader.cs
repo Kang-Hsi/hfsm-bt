@@ -32,8 +32,17 @@ public class HFSMLoader : MonoBehaviour
         if (!states.ContainsKey(s))
         {
             states[s] = null;
-            State state = new State(s);
-            states[s] = state;
+
+            if (s is SubStateSO sub && sub.initialState != null)
+            {
+                State innerInitial = GetState(sub.initialState);
+                HierarchicalStateMachine inner = new HierarchicalStateMachine(innerInitial);
+                states[s] = new SubMachineState(inner, s);
+            }
+            else
+            {
+                states[s] = new State(s);
+            }
         }
     }
 }

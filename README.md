@@ -125,13 +125,6 @@ Desarrollamos un prototipo que nos permitirá:
 | Shift| Correr a mayor velocidad. |
 
 # Implementación
-Los siguientes scripts han sido desarrollados por el equipo durante la práctica:
- 
-|Script|Tipo|Definición|
-|--|--|--|
-|CameraFollow|Component|Controla el seguimiento de la camara segundaria al jugador para la minimapa|
-|Waypoints ||
-
 ## **Comportamientos**
 ### Máquina de estados finitos (FSM)
 - Modelo computacional que representa un sistema con un número limitado de estados y que solo puede estar en uno a la vez. 

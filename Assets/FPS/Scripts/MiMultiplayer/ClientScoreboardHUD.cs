@@ -17,12 +17,12 @@ public class ClientScoreboardHUD : MonoBehaviour
     [SerializeField] TextMeshProUGUI scoreboardText;
 
     [Header("Layout cabecera (Time / FPS)")]
-    [SerializeField] Vector2 headerOffset = new(-12f, -2f);
-    [SerializeField] int headerFontSize = 14;
+    [SerializeField] Vector2 headerOffset = new(-12f, -10f);
+    [SerializeField] int headerFontSize = 25;
 
     [Header("Layout marcador (Kills / Deaths)")]
-    [SerializeField] Vector2 scoreboardOffset = new(-12f, -210f);
-    [SerializeField] int scoreboardFontSize = 14;
+    [SerializeField] Vector2 scoreboardOffset = new(-12f, -350f);
+    [SerializeField] int scoreboardFontSize = 30;
 
     [Header("Refresco")]
     [SerializeField] float refreshIntervalSeconds = 0.25f;
@@ -87,46 +87,40 @@ public class ClientScoreboardHUD : MonoBehaviour
                 int score = kills - deaths;
 
                 m_Sb.Append(name);
-                m_Sb.Append("   Kills ").Append(kills);
-                m_Sb.Append("   Deaths ").Append(deaths);
-                m_Sb.Append("   Score ").Append(score >= 0 ? "+" : "").Append(score);
+                m_Sb.Append("   Kills: ").Append(kills);
+                m_Sb.Append("   Deaths: ").Append(deaths);
+                m_Sb.Append("   Score: ").Append(score >= 0 ? "+" : "").Append(score);
                 m_Sb.AppendLine();
             }
             scoreboardText.text = m_Sb.ToString();
         }
     }
 
+    Canvas m_OwnedCanvas;
+
     void EnsureUI()
     {
         if (headerText != null && scoreboardText != null) return;
 
-        Canvas canvas = null;
-        var canvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
-        foreach (var c in canvases)
-        {
-            if (c.renderMode == RenderMode.ScreenSpaceOverlay || c.renderMode == RenderMode.ScreenSpaceCamera)
-            {
-                canvas = c;
-                break;
-            }
-        }
-
-        if (canvas == null)
+        // Siempre creamos nuestro propio Canvas (con CanvasScaler conocido) para que el
+        // tamaño del HUD no dependa de qué Canvas encuentre primero FindObjectsByType.
+        if (m_OwnedCanvas == null)
         {
             var canvasGo = new GameObject("MatchHUDCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            canvas = canvasGo.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 100;
+            m_OwnedCanvas = canvasGo.GetComponent<Canvas>();
+            m_OwnedCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            m_OwnedCanvas.sortingOrder = 100;
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0.5f;
         }
 
         if (headerText == null)
-            headerText = CreateText(canvas, "MatchHUDHeader", headerOffset, headerFontSize);
+            headerText = CreateText(m_OwnedCanvas, "MatchHUDHeader", headerOffset, headerFontSize);
 
         if (scoreboardText == null)
-            scoreboardText = CreateText(canvas, "MatchHUDScoreboard", scoreboardOffset, scoreboardFontSize);
+            scoreboardText = CreateText(m_OwnedCanvas, "MatchHUDScoreboard", scoreboardOffset, scoreboardFontSize);
     }
 
     TextMeshProUGUI CreateText(Canvas canvas, string name, Vector2 offset, int fontSize)

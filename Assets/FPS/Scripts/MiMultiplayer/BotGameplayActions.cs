@@ -268,7 +268,7 @@ public class BotGameplayActions : MonoBehaviour
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
             targetRot,
-            Time.deltaTime * 8f
+            Time.deltaTime * 12f
         );
     }
 
@@ -428,6 +428,7 @@ public class BotGameplayActions : MonoBehaviour
     {
         StopNavigation();
         m_target = null;
+        TryFireCurrentWeaponPrimary(false, false, true);
     }
 
     public bool TryPickAWeapon(Vector3 origin, out Vector3 result)

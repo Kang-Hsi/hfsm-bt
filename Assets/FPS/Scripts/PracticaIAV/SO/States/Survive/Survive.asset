@@ -9,13 +9,8 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-<<<<<<<< HEAD:Assets/FPS/Scripts/PracticaIAV/SO/States/SO_Super.asset
-  m_Script: {fileID: 0}
-  m_Name: SO_Super
-========
   m_Script: {fileID: 11500000, guid: fa2c4dfed0cd1a74e9ee06ce35df7f59, type: 3}
   m_Name: Survive
->>>>>>>> main:Assets/FPS/Scripts/PracticaIAV/SO/States/Survive/Survive.asset
   m_EditorClassIdentifier: Assembly-CSharp::SubStateSO
   transitions:
   - {fileID: 11400000, guid: 706c0d849ff1b7149bad864241e04d6d, type: 2}

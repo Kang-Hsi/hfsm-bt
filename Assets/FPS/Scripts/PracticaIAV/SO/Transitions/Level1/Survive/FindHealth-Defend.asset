@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2300b302336753f4b96a9e437f5255b6, type: 3}
-  m_Name: Evade-FindHealth
+  m_Name: FindHealth-Defend
   m_EditorClassIdentifier: Assembly-CSharp::TransitionSO
-  condition: {fileID: 11400000, guid: 7dcc06209068f3e4791dc9da423fabc0, type: 2}
-  targetState: {fileID: 11400000, guid: 1fc5b019b0ff4e74ca8be9d7ed768bbf, type: 2}
+  condition: {fileID: 11400000, guid: 5a1b2c3d4e5f67890a1b2c3d4e5f6789, type: 2}
+  targetState: {fileID: 11400000, guid: 1c7b56f4a8d9c38e0f5a6b7c8d9e0a1b, type: 2}
   level: 0
   actions: []

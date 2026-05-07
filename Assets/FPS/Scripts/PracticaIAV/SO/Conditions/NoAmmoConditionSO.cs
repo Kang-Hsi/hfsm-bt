@@ -20,7 +20,7 @@ public class NoAmmoConditionSo : ConditionSO
             WeaponController weapon = m_weapons.GetActiveWeapon();
             if (weapon == null) return false;
 
-            return weapon.CurrentAmmoRatio <= 0.1;
+            return weapon.CurrentAmmoRatio <= 0.1f;
         }
     }
 }

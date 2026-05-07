@@ -1,5 +1,4 @@
-﻿using NUnit.Framework.Interfaces;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class HFSMLoader : MonoBehaviour
@@ -33,18 +32,17 @@ public class HFSMLoader : MonoBehaviour
         if (!states.ContainsKey(s))
         {
             states[s] = null;
-            State state;
-            if (s is SubStateSO subStateSO)
+
+            if (s is SubStateSO sub && sub.initialState != null)
             {
-                State initial = GetState(subStateSO.initialState);
-                HierarchicalStateMachine machine = new HierarchicalStateMachine(initial);
-                state = new SubMachineState(machine, s);
+                State innerInitial = GetState(sub.initialState);
+                HierarchicalStateMachine inner = new HierarchicalStateMachine(innerInitial);
+                states[s] = new SubMachineState(inner, s);
             }
             else
             {
-                state = new State(s);
+                states[s] = new State(s);
             }
-            states[s] = state;
         }
     }
 }

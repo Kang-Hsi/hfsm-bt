@@ -268,7 +268,7 @@ public class BotGameplayActions : MonoBehaviour
         transform.rotation = Quaternion.Slerp(
             transform.rotation,
             targetRot,
-            Time.deltaTime * 8f
+            Time.deltaTime * 12f
         );
     }
 
@@ -428,59 +428,68 @@ public class BotGameplayActions : MonoBehaviour
     {
         StopNavigation();
         m_target = null;
+        TryFireCurrentWeaponPrimary(false, false, true);
     }
 
     public bool TryPickAWeapon(Vector3 origin, out Vector3 result)
     {
         var points = WaypointsManager.Instance.weaponWaypoints;
 
-        if (points.Count == 0)
+        Transform nearest = null;
+        float minDist = float.MaxValue;
+
+        foreach (var t in points)
+        {
+            if (t == null || !t.gameObject.activeInHierarchy) continue;
+            var pickup = t.GetComponent<WeaponPickup>();
+            if (pickup == null) continue;
+            if (m_Weapons != null && pickup.WeaponPrefab != null && m_Weapons.HasWeapon(pickup.WeaponPrefab) != null) continue;
+
+            float d = (t.position - origin).sqrMagnitude;
+            if (d < minDist)
+            {
+                minDist = d;
+                nearest = t;
+            }
+        }
+
+        if (nearest == null)
         {
             result = origin;
             return false;
         }
-        else
-        {
-            Transform nearest = WaypointsManager.Instance.GetNearestWaypoint(origin, points);
-            if (nearest == null)
-            {
-                result = origin;
-                return false;
-            }
-            result = nearest.position;
-            return true;
-        }
+        result = nearest.position;
+        return true;
     }
 
     //find medkit
     public bool TryPickHealth(Vector3 origin, out Vector3 result)
     {
-        var health = WaypointsManager.Instance.medkitWaypoints;
+        var pickups = Object.FindObjectsByType<HealthPickup>(FindObjectsSortMode.None);
+        return TryNearestActive(origin, pickups, out result);
+    }
 
-        if (health.Count == 0)
-        {
-            result = origin;
-            return false;
-        }
-        else
-        {
-            Vector3 resultPos = health[0].transform.position;
-            float minDist = Vector3.SqrMagnitude(resultPos - origin);
+    static bool TryNearestActive<T>(Vector3 origin, T[] components, out Vector3 result) where T : Component
+    {
+        Vector3 best = Vector3.zero;
+        float bestDist = float.MaxValue;
+        bool found = false;
 
-            foreach (var p in health)
+        foreach (var c in components)
+        {
+            if (c == null || !c.gameObject.activeInHierarchy) continue;
+            Vector3 pos = c.transform.position;
+            float d = (pos - origin).sqrMagnitude;
+            if (d < bestDist)
             {
-                float currentDist = Vector3.SqrMagnitude(p.transform.position - origin);
-                if (currentDist < minDist)
-                {
-                    minDist = currentDist;
-                    resultPos = p.transform.position;
-                }
+                bestDist = d;
+                best = pos;
+                found = true;
             }
-
-            result = resultPos;
-            return true;
         }
 
+        result = found ? best : origin;
+        return found;
     }
 
     public bool TryPickRandomNavMeshPoint(Vector3 origin, float radius, out Vector3 result)
@@ -520,5 +529,75 @@ public class BotGameplayActions : MonoBehaviour
 
         int randomIndex = Random.Range(0, validWeapons.Count);
         return validWeapons[randomIndex];
+    }
+
+    /// <summary>
+    /// Busca el enemigo con menos vida dentro del radio (con línea de visión) y lo
+    /// guarda como Target. Devuelve true si encontró alguno.
+    /// </summary>
+    public bool SelectLowestHealthEnemy(float radius)
+    {
+        Collider[] hits = Physics.OverlapSphere(transform.position, radius);
+        Transform best = null;
+        float bestHealth = float.MaxValue;
+
+        foreach (var col in hits)
+        {
+            if (col.transform.root == transform) continue;
+            if (!col.transform.root.CompareTag("Enemy")) continue;
+
+            Transform enemy = col.transform.root;
+            Health enemyHealth = enemy.GetComponent<Health>();
+            if (enemyHealth == null) continue;
+            if (enemyHealth.CurrentHealth <= 0f) continue;
+
+            Vector3 origin = transform.position + Vector3.up * 1.5f;
+            Vector3 targetPos = enemy.position + Vector3.up * 1.5f;
+            Vector3 dir = targetPos - origin;
+            float dist = dir.magnitude;
+            dir.Normalize();
+
+            if (Physics.Raycast(origin, dir, out RaycastHit hit, dist))
+            {
+                if (hit.transform.root != enemy) continue;
+            }
+
+            if (enemyHealth.CurrentHealth < bestHealth)
+            {
+                bestHealth = enemyHealth.CurrentHealth;
+                best = enemy;
+            }
+        }
+
+        if (best != null)
+        {
+            m_target = best;
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Mueve al bot en dirección opuesta al Target actual a la velocidad dada.
+    /// Devuelve true si pudo fijar un destino válido en NavMesh.
+    /// </summary>
+    public bool TryFleeFromTarget(float speed, float distance)
+    {
+        if (m_target == null) return false;
+        if (m_NavMeshAgent == null || !m_NavMeshAgent.isOnNavMesh) return false;
+
+        Vector3 awayDir = transform.position - m_target.position;
+        if (awayDir.sqrMagnitude < 0.0001f) return false;
+        awayDir.Normalize();
+
+        Vector3 fleeTarget = transform.position + awayDir * distance;
+
+        if (NavMesh.SamplePosition(fleeTarget, out var hit, 5f, NavMesh.AllAreas))
+        {
+            m_NavMeshAgent.speed = speed;
+            m_NavMeshAgent.isStopped = false;
+            return m_NavMeshAgent.SetDestination(hit.position);
+        }
+        return false;
     }
 }

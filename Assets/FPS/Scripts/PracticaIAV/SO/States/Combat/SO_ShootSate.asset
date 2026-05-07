@@ -14,7 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StateSO
   transitions:
   - {fileID: 11400000, guid: 1e42ab668c83cf746bf9f6b67f920889, type: 2}
-  entryActions: []
+  entryActions:
+  - {fileID: 11400000, guid: 8f4e23c1d5a6905b7c2e3f4a5b6c7d8e, type: 2}
   exitActions: []
   actions:
   - {fileID: 11400000, guid: 1ee45c360c43faa48b6c51554de7cdbd, type: 2}

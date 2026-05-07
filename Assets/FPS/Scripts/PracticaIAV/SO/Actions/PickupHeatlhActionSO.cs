@@ -23,11 +23,9 @@ public class PickupHeatlhActionSO : ActionSO
 
         public void Execute(GameObject agent)
         {
-            Debug.Log("CURAAAa");
             var bot = agent.GetComponent<BotGameplayActions>();
             if (bot == null) return;
 
-            Debug.Log("Estado pillar cura");
             if (bot.HasReachedCurrentDestination())
             {
                 if (bot.TryPickHealth(agent.transform.position, out var dest))

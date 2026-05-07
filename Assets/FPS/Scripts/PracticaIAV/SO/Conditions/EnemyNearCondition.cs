@@ -29,7 +29,6 @@ public class EnemyNearConditionSO : ConditionSO
             if (bot == null)
                 return false;
             bool res = bot.EnemyNear(radius);
-            Debug.Log("eNEMIGO CERCA: " + res);
             return inverse ? !res : res;
         }
     }

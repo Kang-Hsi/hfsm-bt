@@ -20,7 +20,7 @@ public class SuffiecientAmmoConditionSO : ConditionSO
             WeaponController weapon = m_weapons.GetActiveWeapon();
             if (weapon == null) return false;
 
-            return weapon.CurrentAmmoRatio >= 0.7;
+            return weapon.CurrentAmmoRatio >= 0.5f;
         }
     }
 }

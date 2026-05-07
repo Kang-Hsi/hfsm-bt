@@ -1,8 +1,14 @@
 <!-- UNITY CODE ASSIST INSTRUCTIONS START -->
-- Project name: upv-fps
-- Unity version: Unity 6000.3.8f1
+- Project name: IAV26-G07-P3
+- Unity version: Unity 6000.3.13f1
+- Active scene:
+  - Name: PrisonScene
+  - Tags:
+    - Untagged, Respawn, Finish, EditorOnly, MainCamera, Player, GameController, RespawnPoint, ArmaVoto, PatrolPoint, Enemy
+  - Layers:
+    - Default, TransparentFX, Ignore Raycast, Water, UI, PostProcessing, FirstPersonWeapon, PhysicalAmmo
 - Active game object:
-  - Name: Pickup_Flamethrower
+  - Name: GameObject
   - Tag: Untagged
   - Layer: Default
 <!-- UNITY CODE ASSIST INSTRUCTIONS END -->

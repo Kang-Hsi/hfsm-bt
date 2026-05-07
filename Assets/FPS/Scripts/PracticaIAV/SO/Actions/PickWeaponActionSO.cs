@@ -25,7 +25,6 @@ public class PickWeaponActionSo : ActionSO
 
         public void Execute(GameObject agent)
         {
-            Debug.Log("PILLAR ARMA");
             var bot = agent.GetComponent<BotGameplayActions>();
             if (bot == null) return;
 

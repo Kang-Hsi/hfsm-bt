@@ -22,7 +22,7 @@ public class FaceActionSO : ActionSO
             // Parar movimiento
             bot.StopNavigation();
 
-            // Mirar al enemigo
+            // Apuntado smooth pero rápido (slerp con factor 25), evita el salto de un frame.
             bot.FaceTowardsWorldPointSmooth(bot.Target.transform.position);
         }
     }

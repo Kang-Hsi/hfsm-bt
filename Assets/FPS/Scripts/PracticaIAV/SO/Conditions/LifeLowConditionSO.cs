@@ -10,23 +10,24 @@ public class LifeLowerThanConditionSO : ConditionSO
 
     public override ICondition Create()
     {
-        return new LifeLowerThanCondition(lifeThreshold);
+        return new LifeLowerThanCondition(this);
     }
 
     private class LifeLowerThanCondition : ICondition
     {
-        private float lifeThreshold;
+        private readonly LifeLowerThanConditionSO so;
 
-        public LifeLowerThanCondition(float lifeThreshold)
+        public LifeLowerThanCondition(LifeLowerThanConditionSO so)
         {
-            this.lifeThreshold = lifeThreshold;
+            this.so = so;
         }
 
         public bool Test(GameObject agent)
         {
-            bool needSurvival = agent.GetComponent<Health>().CurrentHealth < lifeThreshold;
-            Debug.Log("Vida baja: " +needSurvival +"Vida" +agent.GetComponent<Health>().CurrentHealth);
-            return agent.GetComponent<Health>().CurrentHealth < lifeThreshold;
+            var health = agent.GetComponent<Health>();
+            if (health == null)
+                return false;
+            return health.CurrentHealth < so.lifeThreshold;
         }
     }
 }

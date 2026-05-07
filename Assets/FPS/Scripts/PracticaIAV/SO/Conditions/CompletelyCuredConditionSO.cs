@@ -1,5 +1,4 @@
 using Unity.FPS.Game;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "HFSM/Conditions/CompletelyCured", fileName = "Condition_CompletelyCured")]

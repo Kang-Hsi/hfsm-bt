@@ -1,5 +1,3 @@
-using Unity.FPS.Game;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "HFSM/Conditions/True", fileName = "Condition_True")]

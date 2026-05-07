@@ -1,5 +1,4 @@
 using Unity.FPS.Game;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "HFSM/Conditions/LifeLowerThan", fileName = "Condition_LifeLowerThan")]

@@ -1,6 +1,4 @@
-using Unity.FPS.Game;
 using UnityEngine;
-using UnityEngine.AI;
 
 [CreateAssetMenu(menuName = "HFSM/Conditions/EnemyNear", fileName = "Condition_EnemyNear")]
 public class EnemyNearConditionSO : ConditionSO

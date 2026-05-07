@@ -26,8 +26,16 @@ public class HasAllWeaponsConditionSO : ConditionSO
             if (m_weapons == null)
                 return false;
 
-            bool res = WaypointsManager.Instance.weaponWaypoints.Count == 0;
-            Debug.Log("tiene todo arma: " + res);
+            int filled = 0;
+            int total = m_weapons.WeaponSlotNumber;
+            for (int i = 0; i < total; i++)
+            {
+                if (m_weapons.GetWeaponAtSlotIndex(i) != null)
+                    filled++;
+            }
+
+            bool res = filled >= total;
+            Debug.Log("tiene todas armas: " + res + " (" + filled + "/" + total + ")");
             return inverse ? !res : res;
         }
     }

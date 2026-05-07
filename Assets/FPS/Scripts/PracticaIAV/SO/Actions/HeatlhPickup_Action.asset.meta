@@ -1,12 +1,8 @@
 fileFormatVersion: 2
-<<<<<<<< HEAD:Assets/FPS/Scripts/PracticaIAV/SO/States/SO_Combatir.asset.meta
-guid: b9b2b69ae563c4e2990dcb485886c72a
-========
 guid: 3020929c515f48b4587f95dfa5130ba4
->>>>>>>> main:Assets/FPS/Scripts/PracticaIAV/SO/Actions/HeatlhPickup_Action.asset.meta
 NativeFormatImporter:
   externalObjects: {}
   mainObjectFileID: 11400000
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: 
+  userData:
+  assetBundleName:
+  assetBundleVariant:

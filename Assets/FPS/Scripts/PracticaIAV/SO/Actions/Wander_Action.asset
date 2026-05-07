@@ -13,4 +13,4 @@ MonoBehaviour:
   m_Name: Wander_Action
   m_EditorClassIdentifier: Assembly-CSharp::WanderActionSO
   speed: 4
-  radius: 20
+  radius: 40

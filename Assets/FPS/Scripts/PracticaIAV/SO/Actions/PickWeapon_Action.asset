@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a2777a3d49431f1419b95af27f4f248a, type: 3}
   m_Name: PickWeapon_Action
   m_EditorClassIdentifier: Assembly-CSharp::WalkActionSO
-  speed: 5
+  speed: 4
   searchRadius: 5

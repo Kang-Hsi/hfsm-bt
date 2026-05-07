@@ -6,7 +6,7 @@ using UnityEngine.AI;
 public class ShootActionSO : ActionSO
 {
     [SerializeField]
-    float chargeWeaponTime = 1.5f;
+    float chargeWeaponTime = 1.0f;
     public override IAction Create()
     {
         return new ShootAction(chargeWeaponTime);

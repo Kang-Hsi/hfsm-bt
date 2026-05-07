@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5aa0cb522fee7ff4cb9726aa04bcd1ab, type: 3}
   m_Name: Shoot_Action
   m_EditorClassIdentifier: Assembly-CSharp::ShootActionSO
-  searchRadius: 5
+  chargeWeaponTime: 1.2

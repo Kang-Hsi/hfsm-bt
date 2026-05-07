@@ -25,7 +25,7 @@ public class CompletelyCuredConditionSO : ConditionSO
             if (health == null)
                 return false;
 
-            bool isFullHealth = health.CurrentHealth >= health.MaxHealth;
+            bool isFullHealth = health.CurrentHealth >= health.MaxHealth/2 ;
             bool dead = health.CurrentHealth <= 0.0f;
             return inverse ? dead : isFullHealth;
         }

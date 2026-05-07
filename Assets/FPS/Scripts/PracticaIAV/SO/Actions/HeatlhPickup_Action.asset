@@ -12,4 +12,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 18e1e31392984b748ac9fcf88329aea7, type: 3}
   m_Name: HeatlhPickup_Action
   m_EditorClassIdentifier: Assembly-CSharp::PickAMedkithActionSO
-  speed: 5
+  speed: 6

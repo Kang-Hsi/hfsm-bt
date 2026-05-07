@@ -5,15 +5,24 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// HUD de pantalla que muestra duración de la partida, FPS y la línea
-/// kills - deaths (Score) por cada jugador. Se autohospeda: si no encuentra
-/// un Canvas Screen-Space en escena, crea uno propio. Basta con dejar este
-/// componente en cualquier GameObject de la escena.
+/// HUD de pantalla con dos paneles:
+///  - Cabecera arriba a la derecha (tiempo, FPS).
+///  - Marcador (kills - deaths) por jugador, debajo del minimapa.
+/// Se autohospeda: si no encuentra un Canvas Screen-Space en escena, crea uno propio.
 /// </summary>
 public class ClientScoreboardHUD : MonoBehaviour
 {
-    [Header("UI (opcional, se crea automáticamente si no se asigna)")]
+    [Header("UI (opcional, se crean automáticamente si no se asignan)")]
+    [SerializeField] TextMeshProUGUI headerText;
     [SerializeField] TextMeshProUGUI scoreboardText;
+
+    [Header("Layout cabecera (Time / FPS)")]
+    [SerializeField] Vector2 headerOffset = new(-12f, -2f);
+    [SerializeField] int headerFontSize = 14;
+
+    [Header("Layout marcador (Kills / Deaths)")]
+    [SerializeField] Vector2 scoreboardOffset = new(-12f, -210f);
+    [SerializeField] int scoreboardFontSize = 14;
 
     [Header("Refresco")]
     [SerializeField] float refreshIntervalSeconds = 0.25f;
@@ -52,44 +61,44 @@ public class ClientScoreboardHUD : MonoBehaviour
         m_NextRefreshTime = Time.unscaledTime + refreshIntervalSeconds;
 
         EnsureUI();
-        if (scoreboardText == null) return;
 
-        var tags = FindObjectsByType<PlayerNameTag>(FindObjectsSortMode.None);
-
-        m_Sb.Clear();
-
-        float elapsed = Time.unscaledTime - m_MatchStartTime;
-        int mins = (int)(elapsed / 60f);
-        int secs = (int)(elapsed % 60f);
-        m_Sb.Append("Time ").Append(mins.ToString("D2")).Append(':').Append(secs.ToString("D2"));
-        m_Sb.Append("   FPS ").Append(Mathf.RoundToInt(1f / Mathf.Max(0.0001f, Time.unscaledDeltaTime)));
-        m_Sb.AppendLine();
-        m_Sb.AppendLine();
-
-        for (int i = 0; i < tags.Length; i++)
+        if (headerText != null)
         {
-            var t = tags[i];
-            string name = t.NetworkedName.Value.ToString();
-            if (string.IsNullOrWhiteSpace(name))
-                name = $"Player {t.OwnerClientId}";
-
-            int kills = t.Kills.Value;
-            int deaths = t.Deaths.Value;
-            int score = kills - deaths;
-
-            m_Sb.Append(name);
-            m_Sb.Append("   Kills ").Append(kills);
-            m_Sb.Append("   Deaths ").Append(deaths);
-            m_Sb.Append("   Score ").Append(score >= 0 ? "+" : "").Append(score);
-            m_Sb.AppendLine();
+            float elapsed = Time.unscaledTime - m_MatchStartTime;
+            int mins = (int)(elapsed / 60f);
+            int secs = (int)(elapsed % 60f);
+            int fps = Mathf.RoundToInt(1f / Mathf.Max(0.0001f, Time.unscaledDeltaTime));
+            headerText.text = $"Time {mins:D2}:{secs:D2}   FPS {fps}";
         }
 
-        scoreboardText.text = m_Sb.ToString();
+        if (scoreboardText != null)
+        {
+            var tags = FindObjectsByType<PlayerNameTag>(FindObjectsSortMode.None);
+            m_Sb.Clear();
+            for (int i = 0; i < tags.Length; i++)
+            {
+                var t = tags[i];
+                string name = t.NetworkedName.Value.ToString();
+                if (string.IsNullOrWhiteSpace(name))
+                    name = $"Player {t.OwnerClientId}";
+
+                int kills = t.Kills.Value;
+                int deaths = t.Deaths.Value;
+                int score = kills - deaths;
+
+                m_Sb.Append(name);
+                m_Sb.Append("   Kills ").Append(kills);
+                m_Sb.Append("   Deaths ").Append(deaths);
+                m_Sb.Append("   Score ").Append(score >= 0 ? "+" : "").Append(score);
+                m_Sb.AppendLine();
+            }
+            scoreboardText.text = m_Sb.ToString();
+        }
     }
 
     void EnsureUI()
     {
-        if (scoreboardText != null) return;
+        if (headerText != null && scoreboardText != null) return;
 
         Canvas canvas = null;
         var canvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
@@ -113,27 +122,37 @@ public class ClientScoreboardHUD : MonoBehaviour
             scaler.referenceResolution = new Vector2(1920f, 1080f);
         }
 
-        var go = new GameObject("ScoreboardText", typeof(RectTransform));
+        if (headerText == null)
+            headerText = CreateText(canvas, "MatchHUDHeader", headerOffset, headerFontSize);
+
+        if (scoreboardText == null)
+            scoreboardText = CreateText(canvas, "MatchHUDScoreboard", scoreboardOffset, scoreboardFontSize);
+    }
+
+    TextMeshProUGUI CreateText(Canvas canvas, string name, Vector2 offset, int fontSize)
+    {
+        var go = new GameObject(name, typeof(RectTransform));
         go.transform.SetParent(canvas.transform, false);
 
         var rt = (RectTransform)go.transform;
         rt.anchorMin = new Vector2(1f, 1f);
         rt.anchorMax = new Vector2(1f, 1f);
         rt.pivot = new Vector2(1f, 1f);
-        rt.anchoredPosition = new Vector2(-16f, -240f);
-        rt.sizeDelta = new Vector2(640f, 420f);
+        rt.anchoredPosition = offset;
+        rt.sizeDelta = new Vector2(560f, 320f);
 
-        scoreboardText = go.AddComponent<TextMeshProUGUI>();
+        var tmp = go.AddComponent<TextMeshProUGUI>();
         var hudFont = ResolveGameHudFont();
         if (hudFont != null)
-            scoreboardText.font = hudFont;
+            tmp.font = hudFont;
         else if (TMP_Settings.defaultFontAsset != null)
-            scoreboardText.font = TMP_Settings.defaultFontAsset;
+            tmp.font = TMP_Settings.defaultFontAsset;
 
-        scoreboardText.fontSize = 22;
-        scoreboardText.fontStyle = FontStyles.Normal;
-        scoreboardText.alignment = TextAlignmentOptions.TopRight;
-        scoreboardText.richText = true;
-        scoreboardText.text = "";
+        tmp.fontSize = fontSize;
+        tmp.fontStyle = FontStyles.Normal;
+        tmp.alignment = TextAlignmentOptions.TopRight;
+        tmp.richText = true;
+        tmp.text = "";
+        return tmp;
     }
 }

@@ -27,14 +27,11 @@ public class EvadeActionSO : ActionSO
             var bot = agent.GetComponent<BotGameplayActions>();
             if (bot == null) return;
 
-            Debug.Log("EVADIR");
-
             if (bot.HasReachedCurrentDestination())
             {
                 bool canFlee = bot.TryFleeFromTarget(speed, fleeDistance);
                 if (!canFlee && bot.Target != null)
                 {
-                    Debug.Log("ACORRALADO - CONTRAATACAR");
                     bot.FaceTowardsWorldPointSmooth(bot.Target.transform.position);
                     bot.TryFireCurrentWeaponPrimary(true, true, false);
                 }

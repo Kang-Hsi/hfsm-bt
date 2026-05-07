@@ -26,7 +26,6 @@ public class WanderActionSO : ActionSO
 
         public void Execute(GameObject agent)
         {
-            Debug.Log("MERODEAR");
             var bot = agent.GetComponent<BotGameplayActions>();
             if (bot == null) return;
 

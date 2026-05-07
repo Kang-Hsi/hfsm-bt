@@ -35,7 +35,6 @@ public class HasAllWeaponsConditionSO : ConditionSO
             }
 
             bool res = filled >= total;
-            Debug.Log("tiene todas armas: " + res + " (" + filled + "/" + total + ")");
             return inverse ? !res : res;
         }
     }

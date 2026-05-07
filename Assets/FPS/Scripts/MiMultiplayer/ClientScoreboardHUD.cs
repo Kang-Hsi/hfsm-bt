@@ -1,19 +1,21 @@
 using System;
 using System.Text;
 using TMPro;
-using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UI;
 
 /// <summary>
-/// HUD local que muestra el marcador (nombre, kills, muertes) de TODOS los jugadores.
-/// Se habilita solo para el jugador dueño.
+/// HUD de pantalla que muestra duración de la partida, FPS y la línea
+/// kills - deaths (Score) por cada jugador. Se autohospeda: si no encuentra
+/// un Canvas Screen-Space en escena, crea uno propio. Basta con dejar este
+/// componente en cualquier GameObject de la escena.
 /// </summary>
-public class ClientScoreboardHUD : NetworkBehaviour
+public class ClientScoreboardHUD : MonoBehaviour
 {
-    [Header("UI")]
+    [Header("UI (opcional, se crea automáticamente si no se asigna)")]
     [SerializeField] TextMeshProUGUI scoreboardText;
 
-    [Header("Update")]
+    [Header("Refresco")]
     [SerializeField] float refreshIntervalSeconds = 0.25f;
 
     float m_NextRefreshTime;
@@ -35,27 +37,17 @@ public class ClientScoreboardHUD : NetworkBehaviour
                 break;
             }
         }
-
         return s_CachedRobotoHudFont;
     }
 
-    public override void OnNetworkSpawn()
+    void Start()
     {
-        base.OnNetworkSpawn();
-
-        if (!IsOwner)
-        {
-            enabled = false;
-            return;
-        }
-
         m_MatchStartTime = Time.unscaledTime;
         EnsureUI();
     }
 
     void Update()
     {
-        if (!IsOwner) return;
         if (Time.unscaledTime < m_NextRefreshTime) return;
         m_NextRefreshTime = Time.unscaledTime + refreshIntervalSeconds;
 
@@ -99,9 +91,27 @@ public class ClientScoreboardHUD : NetworkBehaviour
     {
         if (scoreboardText != null) return;
 
-        // Buscamos un Canvas en el prefab del jugador (ya existe en Human_Prefab).
-        var canvas = GetComponentInChildren<Canvas>(true);
-        if (canvas == null) return;
+        Canvas canvas = null;
+        var canvases = FindObjectsByType<Canvas>(FindObjectsSortMode.None);
+        foreach (var c in canvases)
+        {
+            if (c.renderMode == RenderMode.ScreenSpaceOverlay || c.renderMode == RenderMode.ScreenSpaceCamera)
+            {
+                canvas = c;
+                break;
+            }
+        }
+
+        if (canvas == null)
+        {
+            var canvasGo = new GameObject("MatchHUDCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            canvas = canvasGo.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            canvas.sortingOrder = 100;
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+        }
 
         var go = new GameObject("ScoreboardText", typeof(RectTransform));
         go.transform.SetParent(canvas.transform, false);
@@ -120,11 +130,10 @@ public class ClientScoreboardHUD : NetworkBehaviour
         else if (TMP_Settings.defaultFontAsset != null)
             scoreboardText.font = TMP_Settings.defaultFontAsset;
 
-        scoreboardText.fontSize = 18;
+        scoreboardText.fontSize = 22;
         scoreboardText.fontStyle = FontStyles.Normal;
-        scoreboardText.enableWordWrapping = true;
         scoreboardText.alignment = TextAlignmentOptions.TopRight;
+        scoreboardText.richText = true;
         scoreboardText.text = "";
     }
 }
-

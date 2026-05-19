@@ -7,7 +7,7 @@
 
 This is the individual final project for *Inteligencia Artificial para Videojuegos* at UCM. It extends the group practice **P3 — Disturbios Orbitales**, a 3D FPS prison scenario in which an intelligent agent (bot) competes against a human player in an infinite-respawn skirmish. P3 used a **Hierarchical Finite State Machine (HFSM)** as the bot's decision system, Unity NavMesh navigation driven by a singleton waypoint manager, and a kills / deaths / score HUD.
 
-For this individual extension, the HFSM is **replaced** by a **Behavior Tree (BT)** with composite nodes (`Selector` and `Sequence`), decorators, and `Task`-derived leaves with `run() -> bool`, kept fully data-driven via ScriptableObjects in the same spirit as P3's HFSM. On top of that, the project's plain navigation waypoints are enriched into a **Tactical Waypoint** layer carrying a *cover-quality* score per point, baked at editor time using the `getCoverQuality` ray-cast algorithm. A new BT leaf queries this tactical layer during combat so the bot moves to good cover instead of standing in the open, with the goal of measurably improving the *Kills − Deaths* metric.
+For this individual extension, the HFSM is **replaced** by a **Behavior Tree (BT)**, kept fully data-driven via ScriptableObjects in the same spirit as P3's HFSM. On top of that, the project's plain navigation waypoints are enriched into a **Tactical Waypoint** layer with a *cover-quality* score per point. A new BT leaf queries this layer during combat so the bot moves to good cover instead of standing in the open, with the goal of measurably improving the *Kills − Deaths* metric.
 
 # Installation and usage
 

@@ -1,45 +1,34 @@
-# Inteligencia Artificial para Videojuegos Práctica 3: Disturbios Orbitales
+# IAV26 — Individual Final Project: Behavior Trees and Tactical Waypoints
 
-***Autores***
-- Haoshuang Hou ([HaoshuangHou](https://github.com/HaoshuangHou))
-- Bingcheng Wang ([bingoo30](https://github.com/bingoo30))
+**Author**
 - Leopold Popper ([Kang-Hsi](https://github.com/Kang-Hsi))
 
-# Resumen
+# Summary
 
-Un prototipo básico de un un entorno virtual que nos sirve para poner en práctica la **toma de decisiones**. Este es el [enunciado](https://narratech.com/es/inteligencia-artificial-para-videojuegos/decision/disturbios-orbitales/) en la web de Narratech.
+This is the individual final project for *Inteligencia Artificial para Videojuegos* at UCM. It extends the group practice **P3 — Disturbios Orbitales**, a 3D FPS prison scenario in which an intelligent agent (bot) competes against a human player in an infinite-respawn skirmish. P3 used a **Hierarchical Finite State Machine (HFSM)** as the bot's decision system, Unity NavMesh navigation driven by a singleton waypoint manager, and a kills / deaths / score HUD.
 
-El objetivo es usar una máquina de estados jeárquica, técnica frecuentemente usada en la industria, combinado con búsquedas de caminos mediante mallas de navegación y comportamientos de dirección.
+For this individual extension, the HFSM is **replaced** by a **Behavior Tree (BT)** with composite nodes (`Selector` and `Sequence`), decorators, and `Task`-derived leaves with `run() -> bool`, kept fully data-driven via ScriptableObjects in the same spirit as P3's HFSM. On top of that, the project's plain navigation waypoints are enriched into a **Tactical Waypoint** layer carrying a *cover-quality* score per point, baked at editor time using the `getCoverQuality` ray-cast algorithm. A new BT leaf queries this tactical layer during combat so the bot moves to good cover instead of standing in the open, with the goal of measurably improving the *Kills − Deaths* metric.
 
-# Instalación y uso
+# Installation and usage
 
-Todo el contenido del proyecto está disponible en este repositorio. Se utiliza Unity 6 **(6000.3.12f1).**
+All project content is available in this repository. Unity 6 **(6000.3.12f1)** is used. The executable of the project is located in the repository so that the behaviors can be experienced.
 
-En el repositorio se localiza el ejecutable de dicha práctica para poder experimentar los comportamientos.
+# Introduction
 
-# Introducción
+The virtual environment is a 3D space prison populated by:
 
-Este proyecto es una práctica de la asignatura de Inteligencia Artificial para Videojuegos del Grado en Desarrollo de Videojuegos de la UCM. Consiste en plantear un escenario virtual 3D que representa una prisión espacial con las siguientes instancias: 
-- **Prisioneros**: son enemigos entre sí. Cada uno de ellos puede ser controlado por un jugador o una IA. Aparecen en alguno de los puntos de regeneración establecidos. Pueden moverse, disparar, apuntar, cambiar de arma, saltar, agacharse, correr y volar.
-- **Armas**: objectos recolectables exclusivamente para los prisioneros. Existen distintos tipos:
-    1. *Pistola (gun)*: arma por defecto.
-    2. *Lanzamisiles (launcher)*: arma que lanza unos discos explosivos.
-    3. *Fusil de francotirador (sniper)*: arma de largo alcance.
-    4. *Lanzallamas (flamethower)*: arma que lanza llamas,pero no hay mecánicas de propagación del fuego. .
-    5. *Rifle (rifle)*: arma de mayor estabilidad, aunque también de mayor peso.
-    6. *Dos pistola (guns)*.
-    7. *Escopeta (shot gun)*: arma que produce daño en un radio más ancho.
-- **Utensilios**: botiquines para recuperar salud o el propulsor para poder «volar» con él.
-- **Vigilantes robóticos**: disparan a los prisioneros y pueden matarlos. 
-Distinguimos dos tipos:
-    1. Torretas: poderosas pero inmóviles.
-    2. Robots flotantes: más déviles pero móviles. 
+- **Prisoners** — mortal enemies of each other. Each can be controlled by a human player or a bot. They spawn at predefined respawn points and can move, shoot, aim, change weapons, jump, crouch, run, and fly with a jetpack.
+- **Weapons** — collectible only by prisoners: pistol, missile launcher, sniper rifle, flamethrower, rifle, dual pistols, shotgun.
+- **Utensils** — health kits and jetpack pickups.
+- **Robotic guards** — patrol the prison and fire at any prisoner. Two kinds: stationary **turrets** (powerful but immobile) and **hover bots** (weaker but mobile).
 
-# Punto de partida
+The game is endless: a prisoner respawns each time it is eliminated. The bot's goal is to maximise *Kills − Deaths* over a session.
 
-Se parte de un proyecto base proporcionado por el profesor y disponible en el siguiente repositorio: [fps-online](https://github.com/narratech/fps-online)
+# Starting point
 
-A nivel arquitectónico, el jugador humano y el bot comparten "cuerpo" (`CharacterController`, animaciones, armas) y se diferencian en quién decide sus acciones: el humano por entrada de periféricos, el bot por la HFSM:
+This repository was duplicated from the group practice [IAV26-G07-P3](https://github.com/IAV26-G07/IAV26-G07-P3) with its full commit history preserved for attribution. Individual work for this project begins at commit `Individual Project Start`. The group practice itself derives from the teacher's [FPS-Online](https://github.com/narratech/fps-online) starter, available on the Narratech [*Disturbios Orbitales*](https://narratech.com/es/inteligencia-artificial-para-videojuegos/decision/disturbios-orbitales/) page.
+
+Architecturally, the human player and the bot share the same body (`CharacterController`, animations, weapons) and differ only in who decides their actions — input devices for the human, **Behavior Tree** for the bot:
 
 ```mermaid
 ---
@@ -48,525 +37,98 @@ config:
   look: neo
 ---
 flowchart LR
-  Input[Teclado / Ratón] --> PIH[PlayerInputHandler]
+  Input[Keyboard / Mouse] --> PIH[PlayerInputHandler]
   PIH --> PCC[PlayerCharacterController]
   PCC --> CC[CharacterController + Animator]
-  CC --> Body1[Movimiento / disparo del<br>Human_Prefab]
+  CC --> Body1[Movement / fire of<br>Human_Prefab]
 
-  HFSM[HFSM<br>HierarchicalStateMachine] --> BGA[BotGameplayActions<br>«fachada de acciones»]
+  BT[Behavior Tree<br>BTLoader] --> BGA[BotGameplayActions<br>action façade]
   BGA --> NMA[NavMeshAgent + PlayerWeaponsManager]
-  NMA --> Body2[Movimiento / disparo del<br>UCM_Bot]
+  NMA --> Body2[Movement / fire of<br>UCM_Bot]
+
+  TW[Tactical Waypoints<br>cover values] -.queried by.-> BT
 ```
 
-A continuación, se enumera una serie de informaciones básicas del repositorio original:
-- *Human_Prefab* representa al jugador humano.
-- *UCM_Bot* es la IA que hay que programar si se quiere un bot contra el que enfrentarse.
+# Project structure
 
-### Human_Prefab
-- Lo más relevante que puede encontrarse en la raíz del prefab:
-* *NetworkObject:* identidad de red del jugador.
-* *PlayerInput (Input System):* componente de Unity que gestiona dispositivos/mapas de entrada.
-* *NewMonoBehaviourScript:* habilita cámara/controles sólo para el propietario, crea el HUD del marcador, etc.
-* *PlayerRespawner:* maneja muerte/respawn en red (RPC al server y respawn al cliente).
-* *ClientNetworkTransform:* sincroniza transform (owner authority en tu setup).
-* *PlayerHealthSync:* sincroniza vida/estado.
-* *PlayerVotingSync (solo en Human):* sistema de votación/acciones especiales.
-* *PlayerNameTag:* nombre/kills/deaths en red.
-* *ClientNetworkAnimator:* Script para hacer animación sincronizada.
-* *Rigging / IK / Weapon sync:* WeaponIKSync, ThirdPersonWeaponSync, RigBuilder, constraints, etc. Son scripts de sincronización (por ejemplo PlayerHealthSync, ThirdPersonWeaponSync, LocalVisibility...).
-* *UI (CanvasScaler, GraphicRaycaster, TMP):* el canvas world-space del nametag y elementos.
-* *CharacterController: componente nativo de Unity para mover un “personaje tipo cápsula” en el mundo sin usar un Rigidbody. Gestiones colisiones, deslizamiento, movimiento 'cinemático', grounding básico... pero no hace nada más.
-* *PlayerCharacterController:* Script de este proyecto que hace las veces de MENTE del CharacterController, lee la entrada con PlayerInputHandler, y lo convierte en movimiento, rotación, coordina la cámara, la animación, está pendiente de la salud, muerte, apuntado, etc. 
+The project root keeps the standard Unity layout. Most source code lives under `Assets/FPS/Scripts/`:
 
-### UCM_Bot
-En UCM_Bot encontramos componentes muy parecidos, aunque se ha añadido FSM como ejemplo de dónde podría ir una máquina de estados que tome las decisiones de ese bot, y BotGameplayActions para hacer las veces de gestor de acciones.
+- `AI/` — bot perception, gameplay actions, weapons handling shared by player and bot.
+- `Editor/` — editor-only utilities, including the tactical-waypoint baker.
+- `Game/`, `Gameplay/` — gameplay and match scripts.
+- `MiMultiplayer/` — multiplayer scaffolding and the HUD (`ClientScoreboardHUD`).
+- `UI/` — UI screens.
+- `PracticaIAV/` — the HFSM ScriptableObjects from P3 (kept for reference, unwired).
+- `BT/` *(new)* — Behavior Tree runtime + ScriptableObject node definitions.
+- `Tactical/` *(new)* — `TacticalWaypoint` type and the cover-quality baker.
 
+# Problem statement
 
-## Estructura del proyecto
+The project's scenes are: intro menu, win screen, lose screen, main scene, secondary scene, and the prison scene. The flow is simple — the player enters the prison scene from the menu and exits when they choose to:
 
-El repositorio nos proporciona el proyecto organizado de una forma específica en la que destaca la carpeta **FPS**, que contiene todos los assets propios del proyecto:
-- Animaciones
-- Arte (fuentes de letra, materiales, modelos, shaders y texturas)
-- Audio
-- Prefabs
-- Escenes
-- Scripts
-- Tutorials
-
-Dentro de la carpeta *script* se localizan las siguientes carpetas:
-- AI
-- Editor
-- Game
-- Gameplay
-- MiMultiplayer
-- UI
-
-# Planteamiento del problema
-Partimos de un proyecto de Unity 3D compuesto por varias escenas: menú inicial, victoria, derrota, escena principal, escena secundaria y escena de prisión.
-El juego seria infinito, es decir, que se puede revivir cada vez que se muera. El flujo del juego se ilustra con el siguiente diagrama:
 ```mermaid
 stateDiagram-v2
-    [*] --> IntroMenu : Game launch
-
-    IntroMenu --> PrisionScene : Press **Play** button
-
-    PrisionScene --> [*]: Press **Exit** button
-
+  [*] --> IntroMenu : Game launch
+  IntroMenu --> PrisonScene : Press Play button
+  PrisonScene --> [*] : Press Exit button
 ```
 
-Desarrollamos un prototipo que nos permitirá:
-
-- **A**.Mundo virtual dividido por la malla de navegación de Unity, con las estancias y todos los elementos distribuidos según una serie de puntos representativos del escenario. Dispone de una cámara en primera persona y otra cámara para tener una vista general de la escena.
-
-- **B**. El agente que controlamos aparece en uno de los puntos predefinidos del escenario y puede realizar todas las acciones de movimiento descritas anteriormente.
-
-- **C**. La navegación del agente utiliza la malla de navegación de Unity, siendo su comportamiento por defecto intentar recorrer la prisión buscando armas y atacar a otros prisioneros.
-
-- **D**. La decisión del agente se basa en una máquina de estados finita jerárquica cuyo contenido (estados, transiciones, condiciones y acciones) está definido en `ScriptableObject` editables desde el inspector de Unity. El componente `HFSMLoader` los instancia en tiempo de ejecución.
-
-- **E**. El agente busca maximizar la métrica principal del juego: *número de enemigos eliminado – número de veces que he sido eliminado*. También se muestran por pantalla otras métricas interesantes como número de armas conseguidas, número de utensilios conseguidos, número de vigilantes robóticos eliminados… todo ello con el contexto de la duración de la partida en segundos y el ratio de fotogramas por segundo.
-
-# Diseño de la solución
-
-## Decisiones de diseño
-
-- **HFSM jerárquica frente a FSM plana.** Separa decisiones estratégicas (explorar / combatir / sobrevivir) de tácticas (qué arma usar, cuándo defenderse), y permite factorizar las transiciones globales una sola vez en el estado raíz.
-
-- **Diseño orientado a datos con `ScriptableObject`.** Estados, transiciones, condiciones y acciones se editan en el inspector como ficheros `.asset`, sin recompilar.
-
-- **Acciones desacopladas vía `BotGameplayActions`.** La HFSM invoca métodos de alto nivel (`TryFireCurrentWeaponPrimary`, `TryPickHealth`, …) sin conocer `PlayerCharacterController` ni `NavMeshAgent`.
-
-## Serialización de la HFSM
-
-El grafo HFSM se almacena como `ScriptableObject` en [Assets/FPS/Scripts/PracticaIAV/SO/](Assets/FPS/Scripts/PracticaIAV/SO/):
-
-- **`StateSO`** — listas de `entryActions`, `exitActions`, `actions` y `transitions`.
-- **`SubStateSO`** (extiende `StateSO`) — añade `initialState`; lo convierte en contenedor de submáquina.
-- **`TransitionSO`** — `condition`, `targetState`, `level` y acciones opcionales.
-- **`ActionSO` / `ConditionSO`** — abstractas; cada subclase concreta sobrescribe `Create()` para devolver `IAction` / `ICondition`.
-
-`HFSMLoader.GetState(StateSO)` mapea cada SO a su instancia runtime (`State` o `SubMachineState`) y la cachea en un diccionario, de modo que dos transiciones al mismo SO comparten la misma instancia.
-
-## Controles del juego
-|Input|Función|
-|--|--|
-| Ratón | Rotación de la cámara. |
-| Clic izquierdo del ratón | Atacar con el arma actualmente equipada. |
-| Clic derecho del ratón | Activar el zoom para apuntar con el arma equipada en ese momento. |
-| Rueda del ratón / Teclas de número / E / Q | Cambiar de arma. |
-| Tab / P | Activar o desactivar el menú de opciones / pausa. |
-| WASD/ Flechas| Movimiento del personaje. |
-| C | Agachar. |
-| Barra espaciadora (Space) | Saltar/ Jetpack. |
-| Shift| Correr a mayor velocidad. |
-
-# Implementación
-## **Comportamientos**
-### Máquina de estados finitos (FSM)
-- Modelo computacional que representa un sistema con un número limitado de estados y que solo puede estar en uno a la vez. 
-- Cambia de estado según las entradas actuales y las reglas de transición.
-- Características:
-    1. Posee un conjunto limitado y definido de modos de operación.
-    2. El cambio de un estado a otro se basa en eventos o condiciones.
-    3. Solo opera en un estado específico en cada momento.
-    4. Puede producir lógicas en las transiciones de salida y/o entrada.
-    5. Solo tiene información de su estado presente, no el historial completo.
-    6. Las transiciones pueden ser predecibles o tener opciones.
-- Pseudocódigos:
-**1. Estados y transiciones codificados**
-```py
-class MyFSM:
-    # names for each state 
-    enum State:
-        PATROL
-        ATTACK
-        FLEE
-    # the current state
-    myState: State
-
-    function update():
-        # find the correct state
-        if myState == PATROL:
-            # example transitions
-            if cond_A():
-                myState = ATTACK
-            else if cond_B():
-                myState = FLEE
-        else if myState == ATTACK:
-            # example transitions
-            if not cond_A():
-                myState = PATROL
-        else if myState == FLEE:
-            # example transitions
-            if not cond_B():
-                myState = PATROL
-``` 
->```mermaid
->stateDiagram-v2
->
->[*] --> PATROL
->
->PATROL --> ATTACK: cond_A()
->PATROL --> FLEE: cond_B()
->
->ATTACK --> PATROL: not cond_A()
->
->FLEE --> PATROL: not cond_B()
->```
->*Representación gráfica del ejemplo*
-
-**2. Máquina de estados**
-```py
-class StateMachine:
-    # we are in one state at a time
-    initialState: State
-    # the current state
-    currentState: State = initialState
-
-    # check and apply transitions, returning a list of actions:
-    function update() -> Actions[]:
-        # assume no transition is triggered
-        triggered: Transition = null
-
-        # check through each transition and store the first one that triggeres
-        for t in currentState.getTransitions():
-            if t.isTriggered():
-                triggered = t
-                break
-        
-        # check if we have transition to fire
-        if triggered:
-            # find the target state
-            targetState = triggered.getTargetState()
-
-            # add the exit action of the old state, 
-            # the transition action and the entry for the new state
-            actions = currentState.getExitActions()
-            actions += triggered.getActions()
-            actions += targetState.getEntryActions()
-
-            # complete the transition and return the action list
-            currentState = targetState
-            return actions
-        # otherwise just return the current state's actions
-        else:
-            return currentState.getActions()
-``` 
-**3. Interfaces**
-```py
-class State:
-    funtion getActions() -> Action[]
-    funtion getEntryActions() -> Action[]
-    funtion getExitActions() -> Action[]
-    funtion getTransitions() -> Transition[]
-
-class Transtition:
-    # logic condition
-    condition: Condition
-    funtion isTriggered() -> bool:
-        return condition.test()
-
-    targetState: State
-    funtion getTargetState() -> State:
-        return targetState
-    
-    actions: Actions[]
-    funtion getActions() -> Action[]:
-        return actions
-
-# base interface for all FSM conditions
-class Condition:
-    funtion test() -> bool
-
-# all programmed conditions must inherit from this interface
-class MyCondition extends Condition:
-    # store datas we want to test
-
-    function test() -> bool:
-    # our logic
-``` 
-
-### Máquina de estados jerárquica (HFSM)
-- Extensión de la FSM que permite que un estado contenga otros sub-estados internos, organizando el comportamiento en niveles y evitando la repetición de lógica común.
-- Características:
-    1. Un estado puede tener dentro otros estados.
-    2. Los estados hijos heredan las transiciones y acciones del estado padre.
-    3. Evita dibujar la misma transición desde muchos estados.
-    4. Al entrar a un padre, se puede activar su estado hijo inicial.
-    5. Puede recordar en qué sub-estado estaba al salir y volver allí al reingresar.
-    6. Lo que aplica para varios estados se declara una sola vez en el ancestro común.
-    7. Permite crecer el comportamiento sin explotar en transiciones cruzadas.
-- Pseudocódigos:
-**1. Interfaz base**
-```py
-class HSMBase:
-    # the structure returned by update
-    class UpdateResult:
-        actions
-        transition
-        level
-    
-    function getActions() -> Action[]:
-        return []
-    
-    function update() -> UpdateResult:
-        UpdateResult result = new UpdateResult()
-        result.actions = getActions()
-        result.transition = null
-        result.level = 0
-        return result
-    
-    # pure virtual function
-    function getStates() -> State[] 
-``` 
-**2. Máquina de estados jerárquica**
-```py
-class HierarchicalStateMachine extends HSMBase:
-    # list of states for when the machine has no current state
-    initialState: State
-
-    # current state of the machine
-    currentState: State = initialState
-
-    # get the current state stack
-    function getStates() -> State[]:
-        if currentState:
-            return currentState.getStates()
-        else:
-            return []
-    
-    # recursively update the machine
-    function update() -> UpdateResult:
-        # if we're in no state, just use the initial one
-        if not currentState:
-            currentState = initialState
-            return currentState.getEntryActions()
-        
-        # try to find a transition in the current state
-        triggeredTransition = null
-        for t in currentState.getTransitions():
-            if t.isTriggered():
-                triggeredTransition = t
-                break
-        
-        # if we found one, make a result structure of it
-        if triggeredTransition:
-            result = new UpdateResult()
-            result.actions = []
-            result.transition = triggeredTransition
-            result.level = triggeredTransition.getLevel()
-        # otherwise, recurse down for a result
-        else:
-            result = currentState.update()
-        
-        # check if the result contains a transition
-        if result.transition:
-            # act based on its level
-            if result.level == 0:
-                # its on our level: honor it
-                targetState = result.transition.getTargetState()
-                result.actions += result.transition.getTargetState()
-                result.actions += currentState.getExitActions()
-                result.actions += result.transition.getActions()
-                result.actions += targetState.getEntryActions()
-
-                # set our current state
-                currentState = targetState
-
-                # add our normal action (we may be a state)
-                result.actions += getActions()
-
-                # clear the transition 
-                result.transition = null
-            else if result.levels > 0:
-                # it's destinated for a higher level
-                # exit our current state
-                result.actions += currentState.getExitActions()
-                currentState = null
-
-                # decrease the number of levels to go
-                result.level -= 1
-            else:
-                # it needs to be passed down
-                targetState = result.transition.getTargetState()
-                targetMachine = targetState.parent
-                result.actions += result.transition.getActions()
-                result.actions += targetMachine.updateDown(targetState, -result.level)
-
-                # clear the transition, so nobody elsee does it
-                result.transition = null
-        # if we did not get a transition
-        else:
-            # just do normal action
-            result.action += getActions()
-        
-        return result
-    
-    # recurses up the parent hierarchy, transitioning into each state 
-    # in turn for the given number of levels
-    function updateDown(state: State, level: int) -> Action[]:
-        # if we are not top level, continue
-        if level > 0:
-            # pass ourself as transition state to our parent
-            actions = parent.updateDown(this, level-1)
-        # otherwise we have no actions to add
-        else:
-            actions = []
-        
-        # if we have a current state, exit it
-        if currentState:
-            actions += currentState.getExitActions()
-
-        # move to the new state, and return all the actions
-        currentState = state
-        actions += state.getEntryActions()
-
-        return actions 
-``` 
-**3. Estado y Transición**
-```py
-class State: extends HSMBase:
-    function getStates() -> State:
-        # if we are just a state, then the stack is just us
-        return [this]
-    
-    funtion getActions() -> Action[]
-    funtion getEntryActions() -> Action[]
-    funtion getExitActions() -> Action[]
-    funtion getTransitions() -> Transition[]
-
-class Transtition:
-    # return the difference in levels of the hierarchy from 
-    # the source to the target of the transition
-    function getLevel() -> int
-
-    funtion isTriggered() -> bool
-    funtion getTargetState() -> State
-    funtion getActions() -> Action[]
-``` 
-**4. Submáquina de estados**
-```py
-class SubMachineState: extends State, HierarchicalStateMachine:
-    # route to the state
-    funcion getActions() -> Action[]:
-        return State.getActions()
-    
-    # route update to the state machine
-    function update() -> Action[]:
-        return HierarchicalStateMachine.update()
-    
-    # we get states by adding ourself to our active children
-    function getStates() -> State[]:
-        if currentState:
-            return [this] + currentState.getStates()
-        else:
-            return [this]
-```
-**5. Cargador de estados**
-```py
-
-public class HFSMLoader : MonoBehaviour
-    Dictionary<StateSO, State> states = new Dictionary<StateSO, State>();
-
-    public static HFSMLoader Instance { 
-        get; 
-        private set; 
-    }
-
-    void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-    }
-    public State GetState(StateSO so)
-    {
-        add(so);
-        return states[so];
-    }
-    private void add(StateSO s)
-    {
-        if (!states.ContainsKey(s))
-        {
-            states[s] = null;
-            State state = new State(s);
-            states[s] = state;
-        }
-    }
-}
-
-class HFSMLoader: (singleton)
-    # dictionary (key: StateSO; value: State)
-    states: Dict[]
-    
-    # we get states by adding ourself to our active children
-    function getState(so) -> State:
-        # if this data is not added in the dictionary, create a State and add it
-        add(so)
-        return states[so]
-
-    function add(so):
-         if !states.ContainsKey(s)):
-            states[s] = null
-            state = new State(s)
-            states[s] = state
-``` 
-## Implementación de cada apartado
-### Apartado A
-- La malla de navegación del escenario se encuentra previamente integrada en la base del proyecto, permitiendo la delimitación y navegación entre las distintas estancias del entorno virtual.
-
-- Se ha implementado un manager mediante un patrón Singleton (`WaypointsManager`), encargado de almacenar y administrar los diferentes waypoints del escenario. Entre estos se incluyen los puntos de aparición de armas, botiquines, enemigos y sus respectivos puntos de respawn.
-
-- El proyecto dispone de una cámara en primera persona proporcionada en la base inicial. Adicionalmente, se ha desarrollado una segunda cámara ortogonal con vista cenital, vinculada al seguimiento del bot, utilizada como sistema de minimapa para ofrecer una visión general del entorno.
-
-
-### Apartado B
-- El sistema de respawn se encuentra implementado en la base del proyecto. La escena dispone de distintos puntos de reaparición distribuidos, de manera que, cuando el bot es eliminado, selecciona uno de ellos como nueva posición de aparición. Sólo que en vez de obtener esos puntos por una búsqueda por tag, sea que `WaypointsManager` te devuelva la lista de waypoints.
-
-- En el script `BotGameplayActions.cs` se implementan las principales acciones de comportamiento del bot, incluyendo el desplazamiento hacia objetivos mediante el sistema `NavMeshAgent` de Unity, el disparo, el cambio de arma y otras mecánicas relacionadas con la jugabilidad y la interacción dentro del entorno.
-
-### Apartado C
-- Se ha creado un componente nuevo (`BotController`) para prototipar y verificar la navegación por `NavmeshAgent`, que usa métodos estáticos para buscar waypoint (uno aleatorio, un arma, una cura) y intentar llegar a ese punto usando métodos proporcionados por `BotGameplayActions`.
-
-### Apartado D
-- El comportamiento del agente inteligente se ha implementado mediante una **Máquina de Estados Finitos Jerárquica (HFSM)**, cuyo objetivo es gestionar de forma estructurada, modular y eficiente la toma de decisiones dentro de un entorno dinámico.
-
-- Para ello, se han desarrollado todos los scripts necesarios asociados a este patrón de arquitectura, localizados en la carpeta **PracticaIAV** del proyecto.
-
-- La configuración de los distintos elementos de la HFSM —estados, transiciones, condiciones y acciones— se almacena mediante objetos `ScriptableObject`, permitiendo una definición desacoplada y fácilmente reutilizable. Posteriormente, el componente `HFSMLoader` se encarga de instanciar y construir los objetos funcionales correspondientes a partir de dichos archivos de configuración.
-
-- La creación de una máquina de estados jerárquica se realiza asignándole un estado inicial desde el cual comienza la ejecución del comportamiento.
-
-- Asimismo, el sistema permite la definición de submáquinas de estados mediante `ScriptableObject`. Estas submáquinas contienen los mismos elementos que un estado convencional —acciones, eventos de entrada y salida, y transiciones— incorporando además un campo adicional destinado a especificar el estado inicial interno de la submáquina.
-
-- Finalmente, el componente `BotController` ha sido adaptado para integrarse correctamente con la arquitectura HFSM, permitiendo la ejecución y gestión adecuada de los distintos estados y comportamientos del agente.
-
-
-#### D.1. Enfoque general
-
-Se ha optado este diseño jerárquico por su modularidad, escalabilidad y mantenibilidad del sistema. Este enfoque permite separar:
-
-- *Decisiones estratégicas (alto nivel):* determinan el objetivo global del agente.
-- *Decisiones tácticas (bajo nivel):* definen cómo se ejecuta dicho objetivo en función del contexto actual.
-
-La arquitectura se compone de una **máquina de estados principal (global)** y varias **submáquinas especializadas**, cada una encargada de gestionar un comportamiento concreto.
-
-
-#### D.2. Máquina de estados global
-
-La máquina externa contiene un único `SubStateSO` raíz (`SO_RootState`) que envuelve a las tres submáquinas funcionales. `SO_RootState` arranca por defecto en `Explore` y, en cada tick, evalúa sus tres transiciones de salida:
-
-- **Root → Explore** (`Condition_NoEnemyNear`, radio 20): comportamiento por defecto cuando no hay enemigos cerca y la vida es suficiente.
-- **Root → Combat** (`Condition_EnemyNear`, radio 8): se activa cuando un enemigo entra en el radio de detección.
-- **Root → Survive** (`Condition_LifeLowerThan`, umbral 100 sobre `MaxHealth = 200`): se prioriza siempre que la vida cae por debajo del 50%, independientemente de la presencia de enemigos.
-
-Los tres submáquinas también disponen de transiciones de salida (`level = 1`) hacia Root cuando se cumplen condiciones de "abandonar el comportamiento", por ejemplo `TargetDead` para salir de Combat o `CompletelyCured` para salir de Survive.
+The prototype delivers the following five characteristics.
+
+# Characteristics
+
+- **A — Adapted starting point.** P3's prison scenario reused as the environment: NavMesh, waypoints, respawn points, first-person and minimap cameras.
+
+- **B — Player control.** The human player can move, jump, crouch, run, jetpack, aim, shoot, and switch weapons.
+
+- **C — NavMesh navigation.** The bot uses Unity's NavMesh and the `WaypointsManager` to explore rooms, collect weapons and health packs, and pursue other prisoners.
+
+- **D — Behavior Tree.** The bot's decision system is a Behavior Tree of `Task` nodes returning `run() -> bool`, composed with `Selector`, `Sequence`, and decorators, all data-driven via ScriptableObjects and instantiated by a `BTLoader`. It replaces P3's HFSM (kept in the codebase as historical context but unwired).
+
+- **E — Tactical Waypoints (cover-point).** Plain navigation waypoints are enriched into a `TacticalWaypoint` carrying a `coverValue ∈ [0, 1]`, baked at editor time by the `getCoverQuality` ray-cast algorithm. A new BT leaf `GoToBestCover` picks the waypoint that maximises `coverValue × proximity` relative to the current enemy.
+
+# Design
+
+## Design decisions
+
+- **BT over HFSM.** A BT encodes priority by node ordering inside the root `Selector` rather than by separately-defined transitions and levels. Every node is a `Task` returning `true` / `false`, which keeps the implementation small and the tree easy to extend.
+- **Data-driven nodes.** Every BT node is a ScriptableObject, edited from the Unity inspector and instantiated at runtime by `BTLoader`. Designers can rewire the tree without recompiling.
+- **Façade preserved.** The existing `BotGameplayActions` (`TryFireCurrentWeaponPrimary`, `TryPickHealth`, …) remains the only contract the BT calls into. The body of the bot is untouched.
+- **Editor-time baking.** Cover values are computed once in editor (via menu item) using ray-casts, then serialised onto the asset. Runtime cost is zero: the BT only does a sort.
+- **Tick from root.** Because `Task.run()` returns `bool` (no `RUNNING` state), the bot ticks the whole tree from the root every frame. This gives reactive behavior — the bot drops Combat for Survive the moment its life crosses the threshold.
+
+## BT serialization
+
+The BT graph is stored as `ScriptableObject` assets under `Assets/FPS/Scripts/BT/SO/`:
+
+- **`TaskSO`** — abstract base. Holds editor metadata and a `Create()` factory that returns the runtime `Task` instance.
+- **`CompositeTaskSO`** (extends `TaskSO`) — holds an ordered list of `children`. Subclassed by `SelectorSO` and `SequenceSO` (and optionally non-deterministic variants).
+- **`DecoratorTaskSO`** (extends `TaskSO`) — wraps a single `child`. Subclassed for invert, until-failure, etc.
+- **Leaf SOs** — concrete actions and conditions (`ShootSO`, `FaceSO`, `EnemyNearSO`, `LifeLowSO`, …). Many can be reused from P3's HFSM gameplay primitives.
+
+`BTLoader.GetNode(TaskSO)` maps each SO to its runtime instance and caches it in a dictionary, so the same SO referenced from two places shares the same runtime node.
+
+# Game controls
+
+| Input | Function |
+| -- | -- |
+| Mouse | Camera rotation |
+| Left mouse button | Fire the currently equipped weapon |
+| Right mouse button | Zoom / aim down sights |
+| Mouse wheel / number keys / E / Q | Switch weapons |
+| Tab / P | Toggle options / pause menu |
+| WASD / arrow keys | Move |
+| C | Crouch |
+| Space | Jump / jetpack |
+| Shift | Sprint |
+
+# Implementation
+
+## Behavior Tree
+
+### Tree structure
+
+The bot's decision tree mirrors P3's HFSM priorities (Survive > Combat > Explore), expressed as a priority-ordered `Selector` at the root. Following the standard notation, `?` denotes a Selector and `→` denotes a Sequence:
 
 ```mermaid
 ---
@@ -574,229 +136,241 @@ config:
   theme: dark
   look: neo
 ---
-stateDiagram
-  direction TB
+graph TD
+  Root["Root [?]"] --> SurviveBranch["Survive [→]"]
+  Root --> CombatBranch["Combat [→]"]
+  Root --> ExploreBranch["Explore [?]"]
 
-  [*] --> Explore
-  Explore --> Combat: EnemyNear
-  Explore --> Survive: LifeLowerThan
+  SurviveBranch --> SCond["LifeLow?"]
+  SurviveBranch --> SSel["[?]"]
+  SSel --> Defend["Defend [→]<br>EnemyVeryNear? → SelectWeapon → Face → Shoot"]
+  SSel --> Heal["FindHealth"]
 
-  Combat --> Explore: TargetDead
-  Combat --> Survive: LifeLowerThan
+  CombatBranch --> CCond["EnemyNear?"]
+  CombatBranch --> CSel["[?]"]
+  CSel --> Cover["Take cover [→]<br>NoAmmo? → GoToBestCover"]
+  CSel --> ShootSeq["Shoot [→]<br>SelectWeapon → SelectTarget → Face → Shoot"]
 
-  Survive --> Explore: CompletelyCured
+  ExploreBranch --> FW["FindWeapon (if missing)"]
+  ExploreBranch --> WA["Wander"]
 ```
----
 
-#### D.3. Submáquinas de estados
+The bot ticks the root every frame. A higher-priority subtree (Survive) preempts a lower one (Combat or Explore) as soon as its guard task returns `true`.
 
-Cada estado principal contiene una submáquina de estados que gestiona el comportamiento detallado del agente.
+### Pseudocode
 
-- **3.1. Submáquina de Combate**
+**1. Base task**
 
-    Controla las interacciones directas con otros agentes cuando hay enemigos cerca. La submáquina alterna entre dos estados según el nivel de munición del arma activa:
+```py
+class Task:
+    # Return success (true) or failure (false).
+    function run() -> bool
+```
 
-    - **SO_SelectWeaponState:** ejecuta `SelectWeaponAction`, que llama a `bot.FindValidWeapon()` y conmuta a un slot con munición útil (>50%).
-    - **SO_ShootSate:** elige al enemigo de menor vida (`SelectTargetAction` en entrada), gira hacia él (`FaceAction`) y dispara (`ShootAction`) cada tick.
+Every node in the behavior tree is a `Task`. Running the task returns either success or failure.
 
-    Transiciones internas (`level = 0`):
-    - `SelectWeapon → Shoot` cuando el arma actual tiene ≥50% de munición (`Condition_Ammo`).
-    - `Shoot → SelectWeapon` cuando el arma actual cae a ≤33% (`Condition_NoAmmo`).
+**2. Example leaf — condition**
 
-    Salidas a `Root` (`level = 1`):
-    - `Combat → Root` cuando el objetivo muere (`Condition_TargetDead`), volviendo a Explore.
-    - `Combat → Root (Survive)` cuando la vida cae por debajo del umbral (`Condition_LifeLowerThan`).
+```py
+class EnemyNear extends Task:
+    function run() -> bool:
+        # Task fails if there is no enemy nearby.
+        return distanceToEnemy < 10
+```
 
-    ```mermaid
-    ---
-    config:
-    theme: dark
-    look: neo
-    ---
-    stateDiagram
-    direction TB
+**3. Example leaf — action**
 
-    [*] --> SelectWeapon
-    SelectWeapon --> Shoot: Ammo >= 50%
-    Shoot --> SelectWeapon: Ammo <= 33%
-    Shoot --> [*]: TargetDead / LifeLow
-    SelectWeapon --> [*]: TargetDead / LifeLow
-    ```
----
+```py
+class PlayAnimation extends Task:
+    animationId: int
+    speed: float = 1.0
+    function run() -> bool:
+        if animationEngine.ready:
+            animationEngine.play(animationId, speed)
+            return true
+        else:
+            # Task fails: the animation could not be played.
+            return false
+```
 
-- **3.2. Submáquina de Supervivencia**
+**4. Selector**
 
-    Se activa cuando la vida cae por debajo del umbral de `Condition_LifeLowerThan` (100, sobre `MaxHealth = 200`). Por defecto el agente busca botiquines, pero si un enemigo se acerca demasiado se detiene a defenderse antes de continuar curándose.
+```py
+class Selector extends Task:
+    children: Task[]
+    function run() -> bool:
+        for c in children:
+            if c.run():
+                return true
+        return false
+```
 
-    - **SO_FindHealth:** estado inicial. Llama a `PickupHeatlhAction`, que busca el botiquín activo más cercano (`bot.TryPickHealth`, basado en `FindObjectsByType<HealthPickup>`) y se desplaza hacia él. `Reset_Action` en entrada detiene la navegación previa y suelta el gatillo del arma.
-    - **SO_DefendState:** estado de "plantarse y disparar". En entrada ejecuta `SelectWeaponAction` para conmutar a un arma válida. En cada tick: `SelectTargetAction` (elige al enemigo de menor vida en radio 20), `FaceAction` (apunta) y `ShootAction` (dispara).
+A selector tries each child in order. It succeeds as soon as one child succeeds.
 
-    Transiciones internas (`level = 0`):
-    - `FindHealth → Defend` cuando un enemigo entra en el radio de defensa (`Condition_EnemyVeryNear`, radio 4).
-    - `Defend → FindHealth` cuando el objetivo muere (`Condition_TargetDead`), retomando la búsqueda de botiquín.
+**5. Sequence**
 
-    Salida a `Root` (`level = 1`):
-    - `Survive → Root` cuando la vida está al máximo (`Condition_CompletelyCured`).
+```py
+class Sequence extends Task:
+    children: Task[]
+    function run() -> bool:
+        for c in children:
+            if not c.run():
+                return false
+        return true
+```
 
-    ```mermaid
-    ---
-    config:
-    theme: dark
-    look: neo
-    ---
-    stateDiagram
-    direction TB
+A sequence tries each child in order. It fails as soon as one child fails. It only succeeds if all children succeed.
 
-    [*] --> FindHealth
-    FindHealth --> Defend: EnemyVeryNear (4m)
-    Defend --> FindHealth: TargetDead
-    FindHealth --> [*]: CompletelyCured
-    Defend --> [*]: CompletelyCured
-    ```
----
+**6. Decorators**
 
-- **3.3. Submáquina de Exploración**
+Decorators wrap a single child task and modify how its result propagates. Common decorators include:
 
-    Comportamiento por defecto cuando no hay enemigos cerca ni vida baja. Su objetivo es preparar al agente para el combate completando el inventario de armas; si ya las tiene todas, deambula por el escenario.
+- limit the number of executions of a task,
+- continue until a task returns failure,
+- invert the returned value,
+- act as a guard around a resource.
 
-    - **SO_FindWeaponState:** localiza el `WeaponPickup` más cercano cuyo prefab el bot **aún no posee** (filtra los ya recogidos consultando `PlayerWeaponsManager.HasWeapon`) y se desplaza hacia él (`PickWeaponAction`).
-    - **SO_WanderState:** cuando el bot ya tiene todas las armas, elige un punto aleatorio en la malla de navegación y se mueve a él (`WanderAction`).
+**7. Loader (singleton, mirrors `HFSMLoader`)**
 
-    Transiciones internas (`level = 0`):
-    - `FindWeapon → Wander` cuando se poseen todos los tipos de arma (`Condition_HasAllWeapons`, basado en slots ocupados de `PlayerWeaponsManager`).
-    - `Wander → FindWeapon` cuando deja de tenerse el conjunto completo (`Condition_NoHasAllWeapons`).
+```py
+class BTLoader: (singleton)
+    nodes: Dict[TaskSO, Task]
 
-    Salidas a `Root` (`level = 1`):
-    - `Explore → Root` cuando entra un enemigo en rango (`Condition_EnemyNear`).
-    - `Explore → Root (Survive)` cuando la vida cae por debajo del umbral.
+    function getNode(so) -> Task:
+        if so not in nodes:
+            nodes[so] = so.Create()
+        return nodes[so]
+```
 
-    ```mermaid
-    ---
-    config:
-    theme: dark
-    look: neo
-    ---
-    stateDiagram
-    direction TB
+## Tactical Waypoints
 
-    [*] --> FindWeapon
-    FindWeapon --> Wander: HasAllWeapons
-    Wander --> FindWeapon: NoHasAllWeapons
-    FindWeapon --> [*]: EnemyNear / LifeLow
-    Wander --> [*]: EnemyNear / LifeLow
-    ```
----
+The plain `WaypointsManager` waypoints carry only a `Vector3` position. The new `TacticalWaypoint` extends this with a `coverValue ∈ [0, 1]` field, computed once at editor time by the cover-quality algorithm and stored on the asset.
 
-#### D.5. Ventajas del enfoque
+### `getCoverQuality` pseudocode
 
-El uso de una máquina de estados jerárquica aporta múltiples beneficios:
+From `iterations` candidate "enemy" positions around the location, rays are projected toward the location and the ratio of obstructed rays is returned.
 
-- **Modularidad:** cada comportamiento se implementa de forma independiente.
-- **Escalabilidad:** permite añadir nuevos estados sin modificar la estructura global.
-- **Reutilización:** las submáquinas pueden emplearse en otros agentes.
-- **Claridad:** facilita la comprensión y depuración del sistema.
+```py
+function getCoverQuality(location: Vector,
+                         iterations: int,
+                         characterSize: float) -> float:
+    # Set the initial angle.
+    theta = 0
+    # Start with no hits.
+    hits = 0
+    # No valid rays yet.
+    valid = 0
+    for i in 0...iterations:
+        # Create a point near the location.
+        from = location
+        from.x += RADIUS * cos(theta) + randomBinomial() * RAND_RADIUS
+        from.y += random() * 2 * RAND_RADIUS
+        from.z += RADIUS * sin(theta) + randomBinomial() * RAND_RADIUS
+        # Check for a valid source point.
+        # Example: do not allow the two points to be in the same room.
+        if not sameRoom(from, location):
+            valid += 1
+            # Create the target point near the location.
+            to = location
+            to.x += randomBinomial() * characterSize.x
+            to.y += random() * characterSize.y
+            to.z += randomBinomial() * characterSize.z
+            # Project a ray.
+            if doesRayCollide(from, to):
+                hits += 1
+        # Update the angle.
+        theta += ANGLE
+    return float(hits) / float(valid)
+```
 
----
+A higher result means the position gives better cover.
 
-### Apartado E
-- El agente inteligente ha sido diseñado para maximizar la métrica principal del juego, definida como la diferencia entre el número de enemigos eliminados y el número de veces que el propio agente ha sido eliminado (*Kills - Deaths*). Las prioridades de la HFSM (Survive > Combat > Explore) y los umbrales asociados (`LifeLowerThan = 100`, radio de combate 8m, etc.) están afinados para favorecer esta métrica.
+### BT integration
 
-- El HUD se implementa en el componente `ClientScoreboardHUD` (`Assets/FPS/Scripts/MiMultiplayer/ClientScoreboardHUD.cs`). El componente es **autohospedado**: si no encuentra un `Canvas` Screen-Space en escena, crea uno propio con `CanvasScaler` configurado a referencia 1920×1080. Basta con dejar el componente activo en cualquier `GameObject` de la escena de juego (p. ej. un `MatchHUD` vacío) para que aparezca el HUD.
+A new BT leaf `GoToBestCover` is added to the Combat subtree, used when ammunition is low or a reload window is needed. It picks the waypoint that maximises a `coverValue × proximity` score relative to the current enemy:
 
-- El HUD muestra dos paneles, ambos anclados al borde superior derecho de la pantalla:
-  1. **Cabecera (`Time / FPS`):** duración de la partida en formato `MM:SS` y ratio de fotogramas por segundo, ambos actualizados cada `refreshIntervalSeconds` (0,25 s por defecto).
-  2. **Marcador (por jugador):** una línea por cada `PlayerNameTag` activo con el nombre del jugador, `Kills`, `Deaths` y `Score = Kills − Deaths`. El bot y el jugador humano comparten formato.
+```py
+class GoToBestCover extends Task:
+    function run() -> bool:
+        target = currentEnemy()
+        best = null
+        bestScore = -infinity
+        for wp in TacticalWaypointsManager.all():
+            score = wp.coverValue / distance(bot, wp)   # cover × proximity
+            if score > bestScore:
+                bestScore = score
+                best = wp
+        if best == null: return false
+        bot.NavigateTo(best.position)
+        return true
+```
 
-- Los datos provienen de los `NetworkVariable<int>` `Kills` y `Deaths` de cada `PlayerNameTag`. Los incrementos los gestionan dos rutas en el servidor:
-  - **Eliminar a un vigilante robótico:** `EnemyController.OnDie` envía `SendMessage("AddKillServer")` al *root* del último damage source, que llega a `PlayerNameTag.AddKillServer` y suma 1 a `Kills`.
-  - **Muertes del bot/jugador:** `PlayerRespawner.HandleDeath` incrementa `Deaths` y, si el último atacante es otro `PlayerNameTag`, también su `Kills`.
+# Tests and metrics
 
-## Evolución
-|**Estado**|**Tarea**|**Fecha**|
-|--|--|--|
-|✔|Preparación: Primer contacto y creación del repositorio|9-4-2026|
-|✔|Documentación: Actualizar readme|23-4-2026|
-|✔|Documentación: Actualizar readme|24-4-2026|
-|✔|Desarrollo: Sistema de waypoints implementado|27-4-2026|
-|✔|Desarrollo: Minimapa implementado|27-4-2026|
-|✔|Desarrollo:<br>- Respawn del player<br> - Scripts básicos para HFSM (interfaces, hierarchy state machine y substate machine)<br> Documentación: Actualizar readme|28-4-2026|
-|✔|Desarrollo: Máquina de estados básica funcional con scriptable objects|29-4-2026|
-|✔|Desarrollo: Máquina con estado de caminar, encarar, disparar funcional con transiciones lógicamente diseñadas (sin ser herárquico)|5-5-2026|
-|✔|Desarrollo: HFSM jerárquica completa con submáquinas Explore / Combat / Survive|7-5-2026|
-|✔|Desarrollo: Estado `Defend` y HUD con tiempo, FPS y `Kills/Deaths/Score`|7-5-2026|
-|✔|Documentación: Actualizar readme|7-5-2026|
-|✔|Documentación: Vídeo de demostración añadido|7-5-2026|
-## Pruebas y métricas
+Test plan, organised by characteristic:
 
-A continuación se detalla un plan de pruebas para verificar que se cumplen todos los requisitos del enunciado. Se organiza por apartados (A–E) según las características.
+- **A**
+  1. Verify weapons, utensils, and robotic guards spawn at their designated waypoints.
+  2. Verify the first-person camera follows the protagonist.
+  3. Verify the secondary minimap camera shows a top-down overview that updates as the agent moves.
+- **B**
+  1. Choose `Human_Prefab`. Verify it spawns at a predefined respawn point.
+  2. Verify WASD movement, shooting, weapon switching, sprint, crouch, jump.
+- **C**
+  1. Choose `UCM_Bot`. Verify it explores the prison autonomously.
+  2. Verify it avoids walls and obstacles and never gets stuck for long.
+  3. Verify it walks to weapons and picks them up.
+  4. Verify it detects and attacks other prisoners.
+- **D**
+  1. Verify the BT loads from ScriptableObjects without errors.
+  2. Verify the bot switches behavior correctly: Explore → Combat on enemy near, Combat → Survive on low life.
+  3. Verify `Selector`, `Sequence`, and decorator tasks return the expected `true` / `false` value (logged in the editor).
+- **E**
+  1. Verify the editor menu item bakes `coverValue` on every `TacticalWaypoint`.
+  2. Visualise cover values as colour-coded gizmos in the scene view.
+  3. Verify `GoToBestCover` routes the bot to a high-cover waypoint near the current enemy.
+  4. Compare *Kills − Deaths* with and without the cover node enabled — expect a measurable improvement.
 
-- **Apartado A**
-    1. Verificar que todas las armas, utensilios y vigilantes robóticos aparecen en sus posiciones designadas.
-    2. Confirmar que la cámara en primera persona sigue al protagonista correctamente.
-    3. Confirmar que la cámara secundaria (minimapa) muestra una vista general de la escena desde arriba.
-    4. Verificar que el minimapa se actualiza en tiempo real conforme el agente se desplaza.
-    ---
-- **Apartado B**
-    1. Elegir HUMAN_PREFAB
-    2. Confirmar que el agente controlado por el jugador aparece en uno de los puntos predefinidos del escenario.
-    3. Comprobar que el personaje se puede mover correctamente (WASD).
-    4. Comprobar que el personaje puede disparar y cambiar de arma.
-    5. Comprobar que el personaje puede correr, agacharsee y saltar.
-    ---
-- **Apartado C**
-    1. Elegir UCM_Bot 
-    2. Confirmar que el agente recorre la prisión de manera autónoma.
-    3. Verificar que el agente evita obstáculos y paredes correctamente.
-    4. Verificar que el agente no se queda atascado en un solo lugar.
-    5. Confirmar que el agente se dirige hacia las armas y las recoge.
-    6. Confirmar que el agente detecta a otros prisioneros enemigos y los atacan.
-    ---
-- **Apartado D**
-    1. Confirmar que la máquina de estados finita jerárquica(HFSM) se carga correctamente desde el fichero externo.
-    2. Verificar que todos los estados y transiciones están definidos sin errores.
-    3. Comprobar que el agente cambia de estado adecuadamente según las condiciones.
-    ---
-- **Apartado E**
-    1. Confirmar que al eliminar un enemigo, el número de enemigos eliminados aumenta en 1.
-    2. Verificar que al morir el agente, el número de veces eliminado aumenta en 1.
-    3. Confirmar que al recoger un arma, el número de armas conseguidas aumenta.
-    4. Confirmar que al eliminar una torreta o un robot flotante, el número de vigilantes eliminados aumenta.
-    5. Verificar que todas las métricas se muestran y se actualizan correctamente en el HUD.
-        
-## Conclusiones
-En esta práctica se ha desarrollado un prototipo funcional que integra distintos conceptos fundamentales de la Inteligencia Artificial aplicada a videojuegos dentro de un entorno interactivo en Unity. A través del escenario del laberinto del Minotauro, se han implementado y combinado técnicas clásicas de **decisión** como **Máquina de estados jerárquica**,
-navegación usando **malla de navegación** que ofrece Unity combinado con **waypoints** y comportamientos de dirección (**steering behaviors**).
+# Evolution
 
-Uno de los aspectos más relevantes ha sido la modularidad de la máquina de estados jerárquica, que ha permitido diseñar **orientado a datos** estados independientes usando el `Scriptable Object` de Unity, facilitando su reutilización y extensión. Es una buena práctica porque está muy relacionado con prácticas habituales en la industria.
+| Status | Task | Date |
+| -- | -- | -- |
+| ✔ | Individual Project Setup | 2026-05-18 |
+| ☐ | BT runtime skeleton (`Task` base, `Selector`, `Sequence`, decorators) | — |
+| ☐ | BT ScriptableObjects + `BTLoader` | — |
+| ☐ | Rebuild Explore / Combat / Survive behavior in the BT | — |
+| ☐ | Wire the bot to the BT, unwire the HFSM | — |
+| ☐ | `TacticalWaypoint` type + editor-time `getCoverQuality` baker | — |
+| ☐ | `GoToBestCover` + Combat subtree integration | — |
+| ☐ | Final documentation pass, demo video, conclusions | — |
 
-Además, la incorporación de las métricas ha permitido observar cómo se actúa nuestro agente en diferentes situaciones. Con estos datos podemos descubrir qué estados necesitarían ser mejorados o modificados.
+# Conclusions
 
-Durante el desarrollo se han abordado problemas típicos como la diferencia entre acción y transición o la transición no esperada entre un subestado de un estado a otro estado externo, consolidando así una comprensión práctica de estos sistemas.
+*To be completed after implementation.*
 
-En conjunto, la práctica no solo cumple los objetivos planteados, sino que también sirve como base sólida para futuras ampliaciones, como la introducción de comportamientos más complejos (árboles de comportamiento) o mejoras en la percepción y toma de decisiones de los agentes.
-### Vídeo explicativo
-[Vídeo de demostración en YouTube](https://youtu.be/gRNmIhG2XhA)
-    
-## Licencia
-- Uso educativo y de investigación - UCM
-- Copyright (c) 2026 Haoshuang Hou, Bingcheng Wang, Leopold Popper
-- Se concede permiso permanente a los profesores de la Facultad de Informática de la Universidad Complutense de Madrid para utilizar, reproducir, modificar o distribuir total o parcialmente este material (documentación, código y recursos), con fines educativos o de investigación. Se permite obtener datos agregados de forma anónima o utilizar el material con reconocimiento expreso de los autores.
-- Esta licencia no otorga derechos de uso comercial fuera del ámbito educativo o de investigación, salvo autorización expresa de los autores.
+# Demo video
 
+*To be added after implementation.*
 
-## Referencias
+# License
 
-### Bibliografía
-* Millington, I. (2019). *AI for Games* (3.ª ed.). CRC Press. 
-* de Byl, P.: [*Finite State Machines*](https://learn.unity.com/project/finite-state-machines-1)
-* Kyong-Sok (KC) Chang & David Zhu. [*2.3 Finite State Machine (FSM)
-Concept and Implementation*](https://web.stanford.edu/class/cs123/lectures/CS123_lec07_Finite_State_Machine.pdf). Stanford University (cs123.stanford.edu)
-### Recursos y assets
-*  Unity: [*Introduction to Visual Scripting*](https://learn.unity.com/project/introduction-to-visual-scripting)
-* Unity: [*State machines in Visual Scripting*](https://learn.unity.com/tutorial/state-machines-in-visual-scripting?version=2022.3)
-* Unity Learn: [*Finite State Machine*](https://learn.unity.com/course/finite-state-machines-1)
+- Educational and research use — UCM
+- Copyright (c) 2026 Leopold Popper
+- Permanent permission is granted to the professors of the Faculty of Informatics of the Complutense University of Madrid to use, reproduce, modify, or distribute, in whole or in part, this material (documentation, code, and resources), for educational or research purposes. Aggregated anonymous data may be extracted, and the material may be used with explicit attribution to the author.
+- This license does not grant commercial use rights outside of the educational or research scope, except with explicit authorisation from the author.
 
-### Videojuegos referentes
-* [Bungie.net](https://www.bungie.net/7) (2001). *Halo: Combat Evolved.* (IA de enemigos)
-* [Riot Game](https://www.riotgames.com/es) (2009). [*League Of Legends.*](https://www.leagueoflegends.com/es-es/) (IA de minions)
-* [Team Cherry](https://www.teamcherry.com.au/) (2017).[*Hollow Knight*](https://www.hollowknight.com/) (IA de bosses)
+# References
+
+### Bibliography
+- Millington, I. (2019). *AI for Games* (3rd ed.). CRC Press.
+- Peinado, F. *Árbol de comportamiento* — lecture slides, UCM IAV26.
+- Peinado, F. *Puntos de ruta tácticos* — lecture slides, UCM IAV26.
+- Peinado, F. *Análisis táctico* — lecture slides, UCM IAV26.
+
+### Starter resources
+- Narratech: [*Disturbios Orbitales* — exercise statement](https://narratech.com/es/inteligencia-artificial-para-videojuegos/decision/disturbios-orbitales/)
+- Narratech: [*FPS-Online* — starter project](https://github.com/narratech/fps-online)
+
+### Reference video games
+- Bungie (2001). *Halo: Combat Evolved* — Behavior Tree-based enemy AI.
+- Crytek (2007). *Crysis* — tactical cover use in open-combat AI.

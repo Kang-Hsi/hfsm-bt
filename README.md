@@ -309,27 +309,36 @@ class GoToBestCover extends Task:
 
 Test plan, organised by characteristic:
 
-- **A**
-  1. Verify weapons, utensils, and robotic guards spawn at their designated waypoints.
-  2. Verify the first-person camera follows the protagonist.
-  3. Verify the secondary minimap camera shows a top-down overview that updates as the agent moves.
-- **B**
-  1. Choose `Human_Prefab`. Verify it spawns at a predefined respawn point.
-  2. Verify WASD movement, shooting, weapon switching, sprint, crouch, jump.
-- **C**
-  1. Choose `UCM_Bot`. Verify it explores the prison autonomously.
-  2. Verify it avoids walls and obstacles and never gets stuck for long.
-  3. Verify it walks to weapons and picks them up.
-  4. Verify it detects and attacks other prisoners.
-- **D**
-  1. Verify the BT loads from ScriptableObjects without errors.
-  2. Verify the bot switches behavior correctly: Explore → Combat on enemy near, Combat → Survive on low life.
-  3. Verify `Selector`, `Sequence`, and decorator tasks return the expected `true` / `false` value (logged in the editor).
-- **E**
-  1. Verify the editor menu item bakes `coverValue` on every `TacticalWaypoint`.
-  2. Visualise cover values as colour-coded gizmos in the scene view.
-  3. Verify `GoToBestCover` routes the bot to a high-cover waypoint near the current enemy.
-  4. Compare *Kills − Deaths* with and without the cover node enabled — expect a measurable improvement.
+- **Section A**
+    1. Verify weapons, utensils, and robotic guards spawn at their designated waypoints.
+    2. Verify the first-person camera follows the protagonist.
+    3. Verify the minimap camera shows a top-down overview of the scene.
+    4. Verify the minimap updates in real time as the agent moves.
+    ---
+- **Section B**
+    1. Choose `Human_Prefab`. Verify it spawns at a predefined respawn point.
+    2. Verify the character moves correctly (WASD).
+    3. Verify the character can shoot and switch weapons.
+    4. Verify the character can sprint, crouch, and jump.
+    ---
+- **Section C**
+    1. Choose `UCM_Bot`. Verify it explores the prison autonomously.
+    2. Verify it avoids walls and obstacles correctly.
+    3. Verify it does not get stuck in a single location.
+    4. Verify it walks to weapons and picks them up.
+    5. Verify it detects and attacks other prisoners.
+    ---
+- **Section D**
+    1. Verify the Behavior Tree loads from ScriptableObjects without errors.
+    2. Verify all nodes and links are defined without errors.
+    3. Verify the bot switches behavior correctly: Explore → Combat on enemy near, Combat → Survive on low life.
+    4. Verify `Selector`, `Sequence`, and decorator tasks return the expected `true` / `false` value (logged in the editor).
+    ---
+- **Section E**
+    1. Verify the editor menu item bakes `coverValue` on every `TacticalWaypoint`.
+    2. Verify cover values are visualised as colour-coded gizmos in the scene view.
+    3. Verify `GoToBestCover` routes the bot to a high-cover waypoint near the current enemy.
+    4. Compare *Kills − Deaths* with and without the cover node enabled — expect a measurable improvement.
 
 # Evolution
 

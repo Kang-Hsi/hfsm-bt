@@ -9,6 +9,7 @@ public static class BuildBotBT
     private const string LEAVES_DIR = "Assets/FPS/Scripts/BT/SO/Tree/Leaves";
     private const string HFSM_ACTIONS = "Assets/FPS/Scripts/PracticaIAV/SO/Actions";
     private const string HFSM_CONDITIONS = "Assets/FPS/Scripts/PracticaIAV/SO/Conditions";
+    private const string TACTICAL_SO_DIR = "Assets/FPS/Scripts/Tactical/SO";
 
     [MenuItem("BT/Build Bot Tree")]
     public static void Build()
@@ -40,8 +41,11 @@ public static class BuildBotBT
         var tLifeLow = WrapCondition("Task_LifeLow", "Condition_LifeLowerThan");
         var tEnemyNear = WrapCondition("Task_EnemyNear", "Condition_EnemyNear");
         var tEnemyVeryNear = WrapCondition("Task_EnemyVeryNear", "Condition_EnemyVeryNear");
-        var tHasAmmo = WrapCondition("Task_HasAmmo", "Condition_Ammo");
+        var tNoAmmo = WrapCondition("Task_NoAmmo", "Condition_NoAmmo");
         var tNoAllWeapons = WrapCondition("Task_NoHasAllWeapons", "Condition_NoHasAllWeapons");
+
+        // Tactical waypoints leaf (creates the cover action asset on first run)
+        var tGoToBestCover = WrapTacticalCoverAction();
 
         // Survive subtree
         var defendSeq = MakeSequence("Seq_Defend",
@@ -51,11 +55,13 @@ public static class BuildBotBT
         var surviveSeq = MakeSequence("Seq_Survive",
             tLifeLow, surviveInner);
 
-        // Combat subtree
+        // Combat subtree: try cover when out of ammo, otherwise shoot
+        var takeCoverSeq = MakeSequence("Seq_TakeCover",
+            tNoAmmo, tGoToBestCover, tSelectWeapon);
         var shootSeq = MakeSequence("Seq_Shoot",
-            tHasAmmo, tSelectTarget, tFace, tShoot);
+            tSelectWeapon, tSelectTarget, tFace, tShoot);
         var combatInner = MakeSelector("Sel_CombatInner",
-            shootSeq, tSelectWeapon);
+            takeCoverSeq, shootSeq);
         var combatSeq = MakeSequence("Seq_Combat",
             tEnemyNear, combatInner);
 
@@ -75,6 +81,24 @@ public static class BuildBotBT
         Debug.Log("BT tree built at " + TREE_DIR + ". Root asset: " + AssetDatabase.GetAssetPath(root));
         EditorGUIUtility.PingObject(root);
         Selection.activeObject = root;
+    }
+
+    private static ActionTaskSO WrapTacticalCoverAction()
+    {
+        if (!AssetDatabase.IsValidFolder(TACTICAL_SO_DIR))
+            AssetDatabase.CreateFolder("Assets/FPS/Scripts/Tactical", "SO");
+
+        const string coverActionPath = TACTICAL_SO_DIR + "/GoToBestCover_Action.asset";
+        var coverAction = AssetDatabase.LoadAssetAtPath<GoToBestCoverActionSO>(coverActionPath);
+        if (coverAction == null)
+        {
+            coverAction = ScriptableObject.CreateInstance<GoToBestCoverActionSO>();
+            AssetDatabase.CreateAsset(coverAction, coverActionPath);
+        }
+        var wrapper = ScriptableObject.CreateInstance<ActionTaskSO>();
+        wrapper.action = coverAction;
+        AssetDatabase.CreateAsset(wrapper, $"{LEAVES_DIR}/Task_GoToBestCover.asset");
+        return wrapper;
     }
 
     private static ActionTaskSO WrapAction(string assetName, string hfsmAssetName)

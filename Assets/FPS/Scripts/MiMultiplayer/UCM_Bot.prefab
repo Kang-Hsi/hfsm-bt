@@ -1681,6 +1681,7 @@ GameObject:
   - component: {fileID: 4828794809904590943}
   - component: {fileID: -1086812169682421674}
   - component: {fileID: 7271891809844145442}
+  - component: {fileID: 1613191166234183624}
   m_Layer: 0
   m_Name: UCM_Bot
   m_TagString: Player
@@ -2357,7 +2358,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1744405021316778650}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f0ad2533141a523458ce6afcd1b318e7, type: 3}
   m_Name: 
@@ -2385,6 +2386,19 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &1613191166234183624
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1744405021316778650}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b172494c9247e430f86e50c8d3a51fc3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BotControllerBT
+  rootTaskSO: {fileID: 11400000, guid: dd61d8cd8e8fa44e1ba03fea0a0aba15, type: 2}
 --- !u!1 &1788606075170186430
 GameObject:
   m_ObjectHideFlags: 0

@@ -107,3 +107,17 @@ InitTestScene*.unity*
 # Gameplay result logs produced at runtime
 /[Aa]ssets/ResultadosPartida_*.json
 /[Aa]ssets/ResultadosPartida_*.json.meta
+
+# macOS metadata
+.DS_Store
+**/.DS_Store
+
+# Local editor settings
+.vscode/
+
+# AI tooling artifact (Unity Code Assist)
+AGENTS.md
+
+# Unity performance-testing runtime output
+/[Aa]ssets/Resources/PerformanceTestRunInfo*
+/[Aa]ssets/Resources/PerformanceTestRunSettings*

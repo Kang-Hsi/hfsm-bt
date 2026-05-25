@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.FPS.Gameplay;
 using UnityEngine;
 
 public class BotControllerBT : MonoBehaviour

@@ -38,24 +38,28 @@ public static class BuildBotBT
         var tWander = WrapAction("Task_Wander", "Wander_Action");
 
         // Leaves wrapping existing HFSM conditions
-        var tLifeLow = WrapCondition("Task_LifeLow", "Condition_LifeLowerThan");
         var tEnemyNear = WrapCondition("Task_EnemyNear", "Condition_EnemyNear");
         var tEnemyVeryNear = WrapCondition("Task_EnemyVeryNear", "Condition_EnemyVeryNear");
         var tNoAmmo = WrapCondition("Task_NoAmmo", "Condition_NoAmmo");
         var tNoAllWeapons = WrapCondition("Task_NoHasAllWeapons", "Condition_NoHasAllWeapons");
+        var tAlwaysTrue = WrapCondition("Task_AlwaysTrue", "Condition_True");
+
+        // Survive gate: hysteresis on health (creates the asset on first run)
+        var tLifeHysteresis = WrapLifeHysteresisCondition();
 
         // Tactical waypoints leaf (creates the cover action asset on first run)
         var tGoToBestCover = WrapTacticalCoverAction();
 
-        // Survive subtree: defend if enemy point-blank, otherwise retreat to cover and let passive regen do the healing
+        // Survive subtree: defend if enemy point-blank, retreat to cover if mid-range,
+        // else wait (no-op) so the bot stays in Survive mode while regen ticks up.
         var defendSeq = MakeSequence("Seq_Defend",
             tEnemyVeryNear, tSelectWeapon, tSelectTarget, tFace, tShoot);
         var retreatSeq = MakeSequence("Seq_Retreat",
             tEnemyNear, tSelectTarget, tGoToBestCover);
         var surviveInner = MakeSelector("Sel_SurviveInner",
-            defendSeq, retreatSeq);
+            defendSeq, retreatSeq, tAlwaysTrue);
         var surviveSeq = MakeSequence("Seq_Survive",
-            tLifeLow, surviveInner);
+            tLifeHysteresis, surviveInner);
 
         // Combat subtree: pick target first, then try cover when out of ammo, otherwise shoot
         var takeCoverSeq = MakeSequence("Seq_TakeCover",
@@ -83,6 +87,21 @@ public static class BuildBotBT
         Debug.Log("BT tree built at " + TREE_DIR + ". Root asset: " + AssetDatabase.GetAssetPath(root));
         EditorGUIUtility.PingObject(root);
         Selection.activeObject = root;
+    }
+
+    private static ConditionTaskSO WrapLifeHysteresisCondition()
+    {
+        const string condPath = HFSM_CONDITIONS + "/Condition_LifeHysteresis.asset";
+        var cond = AssetDatabase.LoadAssetAtPath<LifeHysteresisConditionSO>(condPath);
+        if (cond == null)
+        {
+            cond = ScriptableObject.CreateInstance<LifeHysteresisConditionSO>();
+            AssetDatabase.CreateAsset(cond, condPath);
+        }
+        var wrapper = ScriptableObject.CreateInstance<ConditionTaskSO>();
+        wrapper.condition = cond;
+        AssetDatabase.CreateAsset(wrapper, $"{LEAVES_DIR}/Task_LifeHysteresis.asset");
+        return wrapper;
     }
 
     private static ActionTaskSO WrapTacticalCoverAction()

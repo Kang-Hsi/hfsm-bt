@@ -330,15 +330,13 @@ Test plan, organised by characteristic:
     ---
 - **Section D**
     1. Verify the Behavior Tree loads from ScriptableObjects without errors.
-    2. Verify all nodes and links are defined without errors.
-    3. Verify the bot switches behavior correctly: Explore → Combat on enemy near, Combat → Survive on low life.
-    4. Verify `Selector`, `Sequence`, and decorator tasks return the expected `true` / `false` value (logged in the editor).
+    2. Verify the bot switches behavior correctly: Explore → Combat on enemy near, Combat → Survive on low life, Survive → Explore once healed.
+    3. Verify the on-screen GUI overlay correctly tracks and displays the current BT action during play.
     ---
 - **Section E**
-    1. Verify the editor menu item bakes `coverValue` on every `TacticalWaypoint`.
-    2. Verify cover values are visualised as colour-coded gizmos in the scene view.
-    3. Verify `GoToBestCover` routes the bot to a high-cover waypoint near the current enemy.
-    4. Compare *Kills − Deaths* with and without the cover node enabled — expect a measurable improvement.
+    1. When wounded mid-range, verify the bot moves to the best `TacticalWaypoint` (high cover value, far from the enemy).
+    2. Verify the bot's passive regen restores its health while it waits at the cover waypoint.
+    3. Once healed, verify the bot leaves cover and resumes Explore (PickWeapon or Wander).
 
 # Evolution
 

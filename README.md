@@ -149,9 +149,7 @@ graph TD
 
   CombatBranch --> CCond["EnemyNear?"]
   CombatBranch --> CST["SelectTarget"]
-  CombatBranch --> CSel["[?]"]
-  CSel --> Cover["TakeCover [→]<br>NoAmmo? → GoToBestCover → SelectWeapon"]
-  CSel --> ShootSeq["Shoot [→]<br>SelectWeapon → Face → Shoot"]
+  CombatBranch --> ShootSeq["Shoot [→]<br>SelectWeapon → Face → Shoot"]
 
   ExploreBranch --> FW["FindWeapon [→]<br>NoHasAllWeapons? → PickWeapon"]
   ExploreBranch --> WA["Wander"]
@@ -289,16 +287,22 @@ A higher result means the position gives better cover.
 
 ### BT integration
 
-A new BT leaf `GoToBestCover` is added to the Combat subtree, used when ammunition is low or a reload window is needed. It picks the waypoint that maximises a `coverValue × proximity` score relative to the current enemy:
+A new BT leaf `GoToBestCover` is added to the Survive subtree (inside `Retreat`). Before scoring, every waypoint is filtered by a runtime line-of-sight raycast against the current enemy — only waypoints the enemy *cannot* see are eligible. The score then rewards waypoints far from the enemy and close to the bot:
 
 ```py
 class GoToBestCover extends Task:
     function run() -> bool:
         target = currentEnemy()
+        if target == null: return false
         best = null
         bestScore = -infinity
         for wp in TacticalWaypointsManager.all():
-            score = wp.coverValue / distance(bot, wp)   # cover × proximity
+            # Skip waypoints the enemy can already see (not real cover right now).
+            if not rayBlocked(wp.position, target.position):
+                continue
+            distToBot = distance(bot, wp)
+            distFromEnemy = distance(target, wp)
+            score = wp.coverValue * distFromEnemy / distToBot
             if score > bestScore:
                 bestScore = score
                 best = wp
@@ -306,6 +310,17 @@ class GoToBestCover extends Task:
         bot.NavigateTo(best.position)
         return true
 ```
+
+## Runtime features
+
+A few additions that live outside the tree itself but make the BT behave well in the prison scene:
+
+- **`LifeHysteresis` condition.** A stateful condition gating the Survive subtree. Returns `true` once the bot drops below 100 HP, and keeps returning `true` until the bot climbs back above 160 HP. Prevents the bot from flipping out of Survive on the very first regenerated HP and lets the full retreat-and-recover arc play out.
+- **`Wait` fallback.** The innermost Selector of Survive ends with an `AlwaysTrue` leaf. When the bot is in cover and `Defend` / `Retreat` both fail, `Wait` keeps the bot committed to Survive instead of flickering into Explore.
+- **Passive regen on `BotControllerBT`.** Outside the tree, `BotControllerBT.Update` heals the bot at **5 HP/sec** by default. While the BT's last action was `Shoot`, the rate drops to **2 HP/sec**, so trading fire is a poor place to heal and retreating is rewarded.
+- **Debug overlay (`BTDebug`).** A static one-frame buffer that `ActionTask` / `ConditionTask` write to on each tick. `BotControllerBT.OnGUI` draws the current BT action and last condition as a top-left text overlay, which is how you can *see* the tree's decisions while playing.
+- **Editor builder.** `Assets/FPS/Scripts/BT/Editor/BuildBotBT.cs` exposes a menu item `BT → Build Bot Tree` that wipes `BT/SO/Tree/` and regenerates the full tree of SO assets from code. The leaves wrap the existing HFSM `ActionSO` / `ConditionSO` primitives, so all gameplay logic is reused without modification.
+- **Cover-quality baker.** `Assets/FPS/Scripts/Tactical/Editor/CoverQualityBaker.cs` exposes `BT → Bake Tactical Waypoints`, which runs `getCoverQuality` on every `TacticalWaypoint` in the scene and writes the result back to the asset. Spheres in the scene view colour-shift red→green by baked cover value.
 
 # Tests and metrics
 
@@ -345,22 +360,28 @@ Test plan, organised by characteristic:
 
 | Status | Task | Date |
 | -- | -- | -- |
-| ✔ | Individual Project Setup | 2026-05-18 |
-| ☐ | BT runtime skeleton (`Task` base, `Selector`, `Sequence`, decorators) | — |
-| ☐ | BT ScriptableObjects + `BTLoader` | — |
-| ☐ | Rebuild Explore / Combat / Survive behavior in the BT | — |
-| ☐ | Wire the bot to the BT, unwire the HFSM | — |
-| ☐ | `TacticalWaypoint` type + editor-time `getCoverQuality` baker | — |
-| ☐ | `GoToBestCover` + Combat subtree integration | — |
-| ☐ | Final documentation pass, demo video, conclusions | — |
+| ✔ | Individual project setup | 2026-05-18 |
+| ✔ | Behavior Tree system (runtime, ScriptableObjects, loader, editor builder) | 2026-05-25 |
+| ✔ | UCM_Bot wired to the BT; Explore / Combat / Survive rebuilt | 2026-05-25 |
+| ✔ | Tactical waypoints + `GoToBestCover` + passive regen | 2026-05-25 |
+| ✔ | Hysteresis on Survive and on-screen debug overlay | 2026-05-25 |
+| ✔ | Final documentation and demo video | 2026-05-26 |
 
 # Conclusions
 
-*To be completed after implementation.*
+In this project a functional prototype has been developed that integrates fundamental concepts of Artificial Intelligence applied to video games within an interactive environment in Unity. Through the orbital prison scenario, classic decision techniques have been combined: **Behavior Trees**, navigation using Unity's **NavMesh** with waypoints, and a **Tactical Waypoint** layer with cover scoring.
+
+One of the most relevant aspects has been the modularity of the Behavior Tree, which allowed designing data-oriented independent tasks using Unity's `ScriptableObject`, facilitating their reuse and extension. This is good practice because it is closely related to common practices in the industry.
+
+The on-screen debug overlay has allowed the observation of which BT action the bot is performing at any moment, helping verify the priority order between the Survive, Combat, and Explore branches.
+
+During development, typical problems were addressed: the difference between actions and guard conditions; the flicker between Survive and Explore when line of sight to the enemy broke (solved by the `Wait` fallback and hysteresis on the life threshold); and the selection of unsafe cover points (solved with a runtime LOS check and a far-from-enemy scoring term).
+
+Overall, the project meets the proposed objectives and serves as a solid base for future extensions, such as more sophisticated tactical scoring that accounts for path exposure.
 
 # Demo video
 
-*To be added after implementation.*
+[Demo on YouTube](https://youtu.be/BgLdopWeWxg)
 
 # License
 

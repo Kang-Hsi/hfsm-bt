@@ -40,7 +40,6 @@ public static class BuildBotBT
         // Leaves wrapping existing HFSM conditions
         var tEnemyNear = WrapCondition("Task_EnemyNear", "Condition_EnemyNear");
         var tEnemyVeryNear = WrapCondition("Task_EnemyVeryNear", "Condition_EnemyVeryNear");
-        var tNoAmmo = WrapCondition("Task_NoAmmo", "Condition_NoAmmo");
         var tNoAllWeapons = WrapCondition("Task_NoHasAllWeapons", "Condition_NoHasAllWeapons");
         var tAlwaysTrue = WrapCondition("Task_AlwaysTrue", "Condition_True");
 
@@ -61,15 +60,11 @@ public static class BuildBotBT
         var surviveSeq = MakeSequence("Seq_Survive",
             tLifeHysteresis, surviveInner);
 
-        // Combat subtree: pick target first, then try cover when out of ammo, otherwise shoot
-        var takeCoverSeq = MakeSequence("Seq_TakeCover",
-            tNoAmmo, tGoToBestCover, tSelectWeapon);
+        // Combat subtree: pick target first, then shoot (cover-seeking lives entirely in Survive)
         var shootSeq = MakeSequence("Seq_Shoot",
             tSelectWeapon, tFace, tShoot);
-        var combatInner = MakeSelector("Sel_CombatInner",
-            takeCoverSeq, shootSeq);
         var combatSeq = MakeSequence("Seq_Combat",
-            tEnemyNear, tSelectTarget, combatInner);
+            tEnemyNear, tSelectTarget, shootSeq);
 
         // Explore subtree
         var findWeaponSeq = MakeSequence("Seq_FindWeapon",

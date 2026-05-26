@@ -14,4 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SelectorSO
   children:
   - {fileID: 11400000, guid: 5caa004211e094a66b731a8b005a17e8, type: 2}
-  - {fileID: 11400000, guid: f9de70308b94844249072787bf9e6ff3, type: 2}
+  - {fileID: 11400000, guid: 27148899e14ba41dba4b26a676e630da, type: 2}
+  - {fileID: 11400000, guid: d05efed077890470b8a38373833f7e7b, type: 2}

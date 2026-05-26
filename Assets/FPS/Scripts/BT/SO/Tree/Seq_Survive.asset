@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Seq_Survive
   m_EditorClassIdentifier: Assembly-CSharp::SequenceSO
   children:
-  - {fileID: 11400000, guid: 1d10d730e59434ef38cecb2a8c35e710, type: 2}
+  - {fileID: 11400000, guid: c81878dd6f6914d758873ff9bc387b23, type: 2}
   - {fileID: 11400000, guid: 14a8a3dae179c4ac7ac6bd157630de1b, type: 2}

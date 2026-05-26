@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a7fcf4c29dead4aadb7dea2a0ef3b46b, type: 3}
-  m_Name: Seq_TakeCover
+  m_Name: Seq_Retreat
   m_EditorClassIdentifier: Assembly-CSharp::SequenceSO
   children:
-  - {fileID: 11400000, guid: 6d459c1bf9f7845bdaba6d604abc9d98, type: 2}
+  - {fileID: 11400000, guid: 982c6be1d34524bf3b302d2d7725a512, type: 2}
+  - {fileID: 11400000, guid: 8c6a36f686d06423fbbfba35d87507db, type: 2}
   - {fileID: 11400000, guid: b84239c897367467ca1da8124a84c13a, type: 2}
-  - {fileID: 11400000, guid: a0ee6b00951634b71bfea7ed75bd715c, type: 2}

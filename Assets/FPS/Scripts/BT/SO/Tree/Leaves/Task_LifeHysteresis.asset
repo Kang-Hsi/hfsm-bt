@@ -10,6 +10,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2df582bc980d041ce8a9778997559db6, type: 3}
-  m_Name: Task_NoAmmo
+  m_Name: Task_LifeHysteresis
   m_EditorClassIdentifier: Assembly-CSharp::ConditionTaskSO
-  condition: {fileID: 11400000, guid: eae50261e004cdd4289d23bde914fc0b, type: 2}
+  condition: {fileID: 11400000, guid: adbfd1d53092b4588bdba09908ba02be, type: 2}

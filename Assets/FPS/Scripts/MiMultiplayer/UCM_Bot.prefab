@@ -2399,6 +2399,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BotControllerBT
   rootTaskSO: {fileID: 11400000, guid: dd61d8cd8e8fa44e1ba03fea0a0aba15, type: 2}
+  showDebugOverlay: 1
+  regenRatePerSecond: 8
+  regenRateWhileShooting: 2
 --- !u!1 &1788606075170186430
 GameObject:
   m_ObjectHideFlags: 0

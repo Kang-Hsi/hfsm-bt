@@ -13,26 +13,14 @@ public class BotControllerBT : MonoBehaviour
 
     [Header("Passive regen")]
     [SerializeField] private float regenRatePerSecond = 5f;
-    [SerializeField] private float regenDelayAfterDamage = 2f;
+    [SerializeField] private float regenRateWhileShooting = 2f;
 
     private Task root;
     private Health health;
-    private float lastDamageTime = -999f;
 
     void Awake()
     {
         health = GetComponent<Health>();
-        if (health != null) health.OnDamaged += OnDamaged;
-    }
-
-    void OnDestroy()
-    {
-        if (health != null) health.OnDamaged -= OnDamaged;
-    }
-
-    void OnDamaged(float damage, GameObject source)
-    {
-        lastDamageTime = Time.time;
     }
 
     IEnumerator Start()
@@ -55,12 +43,12 @@ public class BotControllerBT : MonoBehaviour
 
         if (health != null
             && health.CurrentHealth > 0f
-            && health.CurrentHealth < health.MaxHealth
-            && Time.time - lastDamageTime >= regenDelayAfterDamage)
+            && health.CurrentHealth < health.MaxHealth)
         {
+            float rate = BTDebug.LastAction == "Task_Shoot" ? regenRateWhileShooting : regenRatePerSecond;
             // Set directly so the OnHealed event (which triggers the blue UI flash) does not fire.
             health.CurrentHealth = Mathf.Min(
-                health.CurrentHealth + regenRatePerSecond * Time.deltaTime,
+                health.CurrentHealth + rate * Time.deltaTime,
                 health.MaxHealth);
         }
     }

@@ -510,21 +510,31 @@ public class BotGameplayActions : MonoBehaviour
     }
 
 
-    //buscar arma para cambiar 
+    //buscar arma para cambiar
     public int FindValidWeapon()
     {
         if (m_Weapons == null)
             return -1;
 
+        // Keep the current weapon if it is still valid.
+        int currentSlot = GetActiveWeaponSlotIndex();
+        if (currentSlot >= 0)
+        {
+            WeaponController current = m_Weapons.GetWeaponAtSlotIndex(currentSlot);
+            if (current != null && !current.IsReloading && current.CurrentAmmoRatio > 0.5f)
+                return currentSlot;
+        }
+
         List<int> validWeapons = new List<int>();
 
         for (int i = 0; i < m_Weapons.WeaponSlotNumber; i++)
         {
+            if (i == currentSlot) continue;
             WeaponController w = m_Weapons.GetWeaponAtSlotIndex(i);
             if (w == null || w.IsReloading || w.CurrentAmmoRatio <= 0.5f) continue;
             else validWeapons.Add(i);
         }
-        
+
         if (validWeapons.Count == 0) return -1;
 
         int randomIndex = Random.Range(0, validWeapons.Count);

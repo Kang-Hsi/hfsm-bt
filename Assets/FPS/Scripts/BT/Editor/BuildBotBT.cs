@@ -55,15 +55,15 @@ public static class BuildBotBT
         var surviveSeq = MakeSequence("Seq_Survive",
             tLifeLow, surviveInner);
 
-        // Combat subtree: try cover when out of ammo, otherwise shoot
+        // Combat subtree: pick target first, then try cover when out of ammo, otherwise shoot
         var takeCoverSeq = MakeSequence("Seq_TakeCover",
             tNoAmmo, tGoToBestCover, tSelectWeapon);
         var shootSeq = MakeSequence("Seq_Shoot",
-            tSelectWeapon, tSelectTarget, tFace, tShoot);
+            tSelectWeapon, tFace, tShoot);
         var combatInner = MakeSelector("Sel_CombatInner",
             takeCoverSeq, shootSeq);
         var combatSeq = MakeSequence("Seq_Combat",
-            tEnemyNear, combatInner);
+            tEnemyNear, tSelectTarget, combatInner);
 
         // Explore subtree
         var findWeaponSeq = MakeSequence("Seq_FindWeapon",

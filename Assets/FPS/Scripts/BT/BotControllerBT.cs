@@ -58,7 +58,10 @@ public class BotControllerBT : MonoBehaviour
             && health.CurrentHealth < health.MaxHealth
             && Time.time - lastDamageTime >= regenDelayAfterDamage)
         {
-            health.Heal(regenRatePerSecond * Time.deltaTime);
+            // Set directly so the OnHealed event (which triggers the blue UI flash) does not fire.
+            health.CurrentHealth = Mathf.Min(
+                health.CurrentHealth + regenRatePerSecond * Time.deltaTime,
+                health.MaxHealth);
         }
     }
 

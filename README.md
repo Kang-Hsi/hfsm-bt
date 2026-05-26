@@ -141,21 +141,23 @@ graph TD
   Root --> CombatBranch["Combat [→]"]
   Root --> ExploreBranch["Explore [?]"]
 
-  SurviveBranch --> SCond["LifeLow?"]
+  SurviveBranch --> SCond["LifeHysteresis?<br>engage <100, disengage >160"]
   SurviveBranch --> SSel["[?]"]
-  SSel --> Defend["Defend [→]<br>EnemyVeryNear? → SelectWeapon → Face → Shoot"]
-  SSel --> Heal["FindHealth"]
+  SSel --> Defend["Defend [→]<br>EnemyVeryNear? → SelectWeapon → SelectTarget → Face → Shoot"]
+  SSel --> Retreat["Retreat [→]<br>EnemyNear? → SelectTarget → GoToBestCover"]
+  SSel --> Wait["Wait (AlwaysTrue)<br>no-op fallback while regen heals"]
 
   CombatBranch --> CCond["EnemyNear?"]
+  CombatBranch --> CST["SelectTarget"]
   CombatBranch --> CSel["[?]"]
-  CSel --> Cover["Take cover [→]<br>NoAmmo? → GoToBestCover"]
-  CSel --> ShootSeq["Shoot [→]<br>SelectWeapon → SelectTarget → Face → Shoot"]
+  CSel --> Cover["TakeCover [→]<br>NoAmmo? → GoToBestCover → SelectWeapon"]
+  CSel --> ShootSeq["Shoot [→]<br>SelectWeapon → Face → Shoot"]
 
-  ExploreBranch --> FW["FindWeapon (if missing)"]
+  ExploreBranch --> FW["FindWeapon [→]<br>NoHasAllWeapons? → PickWeapon"]
   ExploreBranch --> WA["Wander"]
 ```
 
-The bot ticks the root every frame. A higher-priority subtree (Survive) preempts a lower one (Combat or Explore) as soon as its guard task returns `true`.
+The bot ticks the root every frame. A higher-priority subtree (Survive) preempts a lower one (Combat or Explore) as soon as its guard task returns `true`. The `Wait` fallback inside Survive keeps the bot committed to recovery once wounded — `Defend` and `Retreat` both require an enemy in line of sight, so without `Wait` the bot would flicker into `Explore` whenever cover broke LOS. Passive regen on `BotControllerBT` heals while Survive is engaged, so the bot returns to combat once `LifeHysteresis` disengages at >160 HP.
 
 ### Pseudocode
 
@@ -327,6 +329,7 @@ Test plan, organised by characteristic:
     3. Verify it does not get stuck in a single location.
     4. Verify it walks to weapons and picks them up.
     5. Verify it detects and attacks other prisoners.
+    6. Verify Kills - Death HUD updates correctly.
     ---
 - **Section D**
     1. Verify the Behavior Tree loads from ScriptableObjects without errors.

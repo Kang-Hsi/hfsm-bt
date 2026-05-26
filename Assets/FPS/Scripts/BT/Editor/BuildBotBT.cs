@@ -47,13 +47,13 @@ public static class BuildBotBT
         // Tactical waypoints leaf (creates the cover action asset on first run)
         var tGoToBestCover = WrapTacticalCoverAction();
 
-        // Survive subtree: defend if enemy point-blank, retreat to cover if mid-range, else heal
+        // Survive subtree: defend if enemy point-blank, otherwise retreat to cover and let passive regen do the healing
         var defendSeq = MakeSequence("Seq_Defend",
             tEnemyVeryNear, tSelectWeapon, tSelectTarget, tFace, tShoot);
         var retreatSeq = MakeSequence("Seq_Retreat",
             tEnemyNear, tSelectTarget, tGoToBestCover);
         var surviveInner = MakeSelector("Sel_SurviveInner",
-            defendSeq, retreatSeq, tFindHealth);
+            defendSeq, retreatSeq);
         var surviveSeq = MakeSequence("Seq_Survive",
             tLifeLow, surviveInner);
 

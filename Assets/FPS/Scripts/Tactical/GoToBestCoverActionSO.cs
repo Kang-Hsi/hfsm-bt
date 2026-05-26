@@ -33,9 +33,11 @@ public class GoToBestCoverActionSO : ActionSO
                 Vector3 wpPos = wp.transform.position;
                 // Skip waypoints that the enemy can see — not real cover right now.
                 if (!Physics.Linecast(wpPos, enemyPos)) continue;
-                float dist = Vector3.Distance(botPos, wpPos);
-                if (dist < 0.5f) continue;
-                float score = wp.coverValue / dist;
+                float distToBot = Vector3.Distance(botPos, wpPos);
+                if (distToBot < 0.5f) continue;
+                float distFromEnemy = Vector3.Distance(enemyPos, wpPos);
+                // Prefer high-cover waypoints far from the enemy and not too far from the bot.
+                float score = wp.coverValue * distFromEnemy / distToBot;
                 if (score > bestScore)
                 {
                     bestScore = score;

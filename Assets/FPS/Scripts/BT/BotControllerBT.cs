@@ -1,4 +1,5 @@
 using System.Collections;
+using Unity.FPS.Game;
 using Unity.FPS.Gameplay;
 using UnityEngine;
 
@@ -10,7 +11,29 @@ public class BotControllerBT : MonoBehaviour
     [SerializeField]
     private bool showDebugOverlay = true;
 
+    [Header("Passive regen")]
+    [SerializeField] private float regenRatePerSecond = 5f;
+    [SerializeField] private float regenDelayAfterDamage = 2f;
+
     private Task root;
+    private Health health;
+    private float lastDamageTime = -999f;
+
+    void Awake()
+    {
+        health = GetComponent<Health>();
+        if (health != null) health.OnDamaged += OnDamaged;
+    }
+
+    void OnDestroy()
+    {
+        if (health != null) health.OnDamaged -= OnDamaged;
+    }
+
+    void OnDamaged(float damage, GameObject source)
+    {
+        lastDamageTime = Time.time;
+    }
 
     IEnumerator Start()
     {
@@ -28,8 +51,15 @@ public class BotControllerBT : MonoBehaviour
 
     void Update()
     {
-        if (root == null) return;
-        root.Run(gameObject);
+        if (root != null) root.Run(gameObject);
+
+        if (health != null
+            && health.CurrentHealth > 0f
+            && health.CurrentHealth < health.MaxHealth
+            && Time.time - lastDamageTime >= regenDelayAfterDamage)
+        {
+            health.Heal(regenRatePerSecond * Time.deltaTime);
+        }
     }
 
     void OnGUI()

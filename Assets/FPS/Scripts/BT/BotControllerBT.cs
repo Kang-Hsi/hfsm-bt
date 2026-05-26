@@ -38,8 +38,8 @@ public class BotControllerBT : MonoBehaviour
         string action = Strip(BTDebug.LastAction);
         string cond = Strip(BTDebug.LastCondition);
         string result = BTDebug.LastConditionResult ? "true" : "false";
-        var style = new GUIStyle(GUI.skin.box) { fontSize = 22, alignment = TextAnchor.UpperLeft, padding = new RectOffset(12, 12, 8, 8) };
-        GUI.Box(new Rect(10, 10, 520, 90),
+        var style = new GUIStyle(GUI.skin.box) { fontSize = 44, alignment = TextAnchor.UpperLeft, padding = new RectOffset(20, 20, 16, 16) };
+        GUI.Box(new Rect(20, 20, 1000, 170),
             "BT action: " + action + "\nLast condition: " + cond + " = " + result,
             style);
     }

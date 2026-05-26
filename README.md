@@ -7,7 +7,7 @@
 
 This is the individual final project for *Inteligencia Artificial para Videojuegos* at UCM. It extends the group practice **P3 — Disturbios Orbitales**, a 3D FPS prison scenario in which an intelligent agent (bot) competes against a human player in an infinite-respawn skirmish. P3 used a **Hierarchical Finite State Machine (HFSM)** as the bot's decision system, Unity NavMesh navigation driven by a singleton waypoint manager, and a kills / deaths / score HUD.
 
-For this individual extension, the HFSM is **replaced** by a **Behavior Tree (BT)**, kept fully data-driven via ScriptableObjects in the same spirit as P3's HFSM. On top of that, the project's plain navigation waypoints are enriched into a **Tactical Waypoint** layer with a *cover-quality* score per point. A new BT leaf queries this layer during combat so the bot moves to good cover instead of standing in the open, with the goal of measurably improving the *Kills − Deaths* metric.
+For this individual extension, the HFSM is **replaced** by a **Behavior Tree (BT)**, kept fully data-driven via ScriptableObjects in the same spirit as P3's HFSM. On top of that, the project's plain navigation waypoints are enriched into a **Tactical Waypoint** layer with a *cover-quality* score per point. A new BT leaf queries this layer when the bot is wounded so it retreats to good cover instead of standing in the open, with the goal of measurably improving the *Kills − Deaths* metric.
 
 # Installation and usage
 
@@ -85,7 +85,7 @@ The prototype delivers the following five characteristics.
 
 - **D — Behavior Tree.** The bot's decision system is a Behavior Tree of `Task` nodes returning `run() -> bool`, composed with `Selector`, `Sequence`, and decorators, all data-driven via ScriptableObjects and instantiated by a `BTLoader`. It replaces P3's HFSM (kept in the codebase as historical context but unwired).
 
-- **E — Tactical Waypoints (cover-point).** Plain navigation waypoints are enriched into a `TacticalWaypoint` carrying a `coverValue ∈ [0, 1]`, baked at editor time by the `getCoverQuality` ray-cast algorithm. A new BT leaf `GoToBestCover` picks the waypoint that maximises `coverValue × proximity` relative to the current enemy.
+- **E — Tactical Waypoints (cover-point).** Plain navigation waypoints are enriched into a `TacticalWaypoint` carrying a `coverValue ∈ [0, 1]`, baked at editor time by the `getCoverQuality` ray-cast algorithm. A new BT leaf `GoToBestCover` filters waypoints by a runtime line-of-sight check against the current enemy and picks the one that maximises `coverValue × distFromEnemy / distToBot`.
 
 # Design
 
@@ -102,11 +102,11 @@ The prototype delivers the following five characteristics.
 The BT graph is stored as `ScriptableObject` assets under `Assets/FPS/Scripts/BT/SO/`:
 
 - **`TaskSO`** — abstract base. Holds editor metadata and a `Create()` factory that returns the runtime `Task` instance.
-- **`CompositeTaskSO`** (extends `TaskSO`) — holds an ordered list of `children`. Subclassed by `SelectorSO` and `SequenceSO` (and optionally non-deterministic variants).
-- **`DecoratorTaskSO`** (extends `TaskSO`) — wraps a single `child`. Subclassed for invert, until-failure, etc.
-- **Leaf SOs** — concrete actions and conditions (`ShootSO`, `FaceSO`, `EnemyNearSO`, `LifeLowSO`, …). Many can be reused from P3's HFSM gameplay primitives.
+- **`CompositeTaskSO`** (extends `TaskSO`) — holds an ordered list of `children`. Subclassed by `SelectorSO` and `SequenceSO`.
+- **`DecoratorTaskSO`** (extends `TaskSO`) — wraps a single `child`. Subclassed by `InverterSO` and `UntilFailSO`.
+- **`ActionTaskSO` / `ConditionTaskSO`** — leaf wrappers that adapt an existing HFSM `ActionSO` / `ConditionSO` into a BT `Task`, so all gameplay primitives from P3 (`ShootActionSO`, `FaceActionSO`, `EnemyNearConditionSO`, …) are reused without modification.
 
-`BTLoader.GetNode(TaskSO)` maps each SO to its runtime instance and caches it in a dictionary, so the same SO referenced from two places shares the same runtime node.
+`BTLoader.GetTask(TaskSO)` maps each SO to its runtime instance and caches it in a dictionary, so the same SO referenced from two places shares the same runtime node.
 
 # Game controls
 
@@ -234,12 +234,12 @@ Decorators wrap a single child task and modify how its result propagates. Common
 
 ```py
 class BTLoader: (singleton)
-    nodes: Dict[TaskSO, Task]
+    tasks: Dict[TaskSO, Task]
 
-    function getNode(so) -> Task:
-        if so not in nodes:
-            nodes[so] = so.Create()
-        return nodes[so]
+    function getTask(so) -> Task:
+        if so not in tasks:
+            tasks[so] = so.Create(this)
+        return tasks[so]
 ```
 
 ## Tactical Waypoints

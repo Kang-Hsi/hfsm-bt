@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class BTLoader : MonoBehaviour
 {
+    [SerializeField] private int targetFps = 60;
+
     Dictionary<TaskSO, Task> tasks = new Dictionary<TaskSO, Task>();
 
     public static BTLoader Instance { get; private set; }
@@ -13,6 +15,8 @@ public class BTLoader : MonoBehaviour
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
+            Application.targetFrameRate = targetFps;
+            QualitySettings.vSyncCount = 0;
         }
         else
         {

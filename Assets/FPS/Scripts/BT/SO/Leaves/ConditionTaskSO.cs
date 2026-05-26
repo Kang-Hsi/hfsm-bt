@@ -8,6 +8,6 @@ public class ConditionTaskSO : TaskSO
 
     public override Task Create(BTLoader loader)
     {
-        return new ConditionTask(condition.Create());
+        return new ConditionTask(condition.Create(), name);
     }
 }

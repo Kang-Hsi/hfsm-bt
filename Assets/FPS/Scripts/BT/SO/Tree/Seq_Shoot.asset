@@ -14,6 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SequenceSO
   children:
   - {fileID: 11400000, guid: a0ee6b00951634b71bfea7ed75bd715c, type: 2}
-  - {fileID: 11400000, guid: 8c6a36f686d06423fbbfba35d87507db, type: 2}
   - {fileID: 11400000, guid: 1c17145a9abb74444bfef5ce76d36e52, type: 2}
   - {fileID: 11400000, guid: 28d9934d6ab4e47e6a80d2f25e1201b2, type: 2}

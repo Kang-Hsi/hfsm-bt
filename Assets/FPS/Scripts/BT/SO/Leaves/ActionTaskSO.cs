@@ -8,6 +8,6 @@ public class ActionTaskSO : TaskSO
 
     public override Task Create(BTLoader loader)
     {
-        return new ActionTask(action.Create());
+        return new ActionTask(action.Create(), name);
     }
 }
